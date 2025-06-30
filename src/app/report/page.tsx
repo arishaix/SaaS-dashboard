@@ -168,10 +168,9 @@ export default function ReportPage() {
         />
       )}
       <aside
-        className={`fixed lg:static inset-y-0 left-0 z-30 w-64 transform 
-          ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
-          lg:translate-x-0 lg:w-64 transition-transform duration-300 ease-in-out
-          bg-[#16113a] text-white`}
+        className={`fixed lg:static inset-y-0 left-0 z-30 transition-all duration-300
+          ${sidebarOpen ? "w-64" : "w-16"}
+          bg-[#16113a] text-white overflow-hidden`}
       >
         <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
       </aside>

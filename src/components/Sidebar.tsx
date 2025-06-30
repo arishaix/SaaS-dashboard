@@ -26,10 +26,18 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
   ];
 
   return (
-    <div className="h-screen flex flex-col justify-between py-5 px-4">
+    <div
+      className={`h-screen flex flex-col justify-between transition-all duration-300 ${
+        isOpen ? "w-64 px-4 py-5" : "w-16 px-0 py-4 items-center"
+      }`}
+    >
       {/* Logo Section */}
       <div>
-        <div className="flex items-center justify-between mb-8">
+        <div
+          className={`flex items-center ${
+            isOpen ? "justify-between mb-8" : "justify-center mb-6"
+          }`}
+        >
           {isOpen ? (
             <Link href="/dashboard">
               <span className="text-xl font-bold" style={{ color: "#0fd354" }}>
@@ -37,7 +45,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
               </span>
             </Link>
           ) : (
-            <div className="w-8 h-8 rounded-lg bg-[#0fd354] flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-[#0fd354] flex items-center justify-center">
               <span className="text-white font-bold text-lg">S</span>
             </div>
           )}
@@ -55,7 +63,11 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
         </div>
 
         {/* Navigation Links */}
-        <nav className="space-y-2">
+        <nav
+          className={`flex flex-col ${
+            isOpen ? "space-y-2" : "gap-4 items-center mt-4"
+          }`}
+        >
           {navigation.map((item) => {
             const isActive = pathname === item.href;
             return (
@@ -63,8 +75,8 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                 key={item.name}
                 href={item.href}
                 className={`flex items-center ${
-                  isOpen ? "px-4" : "justify-center"
-                } py-3 rounded-lg transition-colors ${
+                  isOpen ? "px-4" : "justify-center w-full"
+                } ${isOpen ? "py-3" : "py-2"} rounded-lg transition-colors ${
                   isActive
                     ? "bg-[#2d2856] text-[#0fd354]"
                     : "hover:bg-[#2d2856] text-white hover:text-white"
