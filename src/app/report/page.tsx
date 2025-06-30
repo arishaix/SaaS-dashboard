@@ -1,0 +1,320 @@
+"use client";
+import { useState, useEffect } from "react";
+import {
+  MagnifyingGlassIcon,
+  FunnelIcon,
+  ArrowDownTrayIcon,
+  Bars3Icon,
+  ChevronUpDownIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+} from "@heroicons/react/24/outline";
+import Sidebar from "@/components/Sidebar";
+import Table from "@/components/Table";
+import Input from "@/components/Input";
+import Select from "@/components/Select";
+
+type SortKey = "name" | "date" | "activity" | "status";
+
+interface ReportItem {
+  id: number;
+  name: string;
+  date: string;
+  activity: string;
+  status: string;
+}
+
+// Sample data for the table
+const reportData: ReportItem[] = [
+  {
+    id: 1,
+    name: "John Doe",
+    date: "2024-03-15",
+    activity: "Login",
+    status: "Completed",
+  },
+  {
+    id: 2,
+    name: "Jane Smith",
+    date: "2024-03-15",
+    activity: "File Upload",
+    status: "Pending",
+  },
+  {
+    id: 3,
+    name: "Mike Johnson",
+    date: "2024-03-14",
+    activity: "Data Export",
+    status: "Failed",
+  },
+  {
+    id: 4,
+    name: "Sarah Williams",
+    date: "2024-03-14",
+    activity: "Profile Update",
+    status: "Completed",
+  },
+  {
+    id: 5,
+    name: "Tom Brown",
+    date: "2024-03-13",
+    activity: "Payment",
+    status: "Processing",
+  },
+];
+
+export default function ReportPage() {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [dateFilter, setDateFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [sortConfig, setSortConfig] = useState<{
+    key: SortKey | null;
+    direction: "asc" | "desc";
+  }>({
+    key: null,
+    direction: "asc",
+  });
+  const itemsPerPage = 5;
+
+  // Handle responsive sidebar behavior
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setSidebarOpen(true);
+      } else {
+        setSidebarOpen(false);
+      }
+    };
+
+    // Initial check
+    handleResize();
+
+    // Add event listener
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Sorting function
+  const handleSort = (key: SortKey) => {
+    setSortConfig((prevSort) => ({
+      key,
+      direction:
+        prevSort.key === key && prevSort.direction === "asc" ? "desc" : "asc",
+    }));
+  };
+
+  // Filter and sort data
+  const filteredAndSortedData = reportData
+    .filter((item) => {
+      const matchesSearch = Object.values(item)
+        .join(" ")
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
+      const matchesDate =
+        dateFilter === "all" || item.date.includes(dateFilter);
+      const matchesStatus =
+        statusFilter === "all" || item.status === statusFilter;
+      return matchesSearch && matchesDate && matchesStatus;
+    })
+    .sort((a, b) => {
+      if (!sortConfig.key) return 0;
+
+      const direction = sortConfig.direction === "asc" ? 1 : -1;
+      if (a[sortConfig.key] < b[sortConfig.key]) return -1 * direction;
+      if (a[sortConfig.key] > b[sortConfig.key]) return 1 * direction;
+      return 0;
+    });
+
+  // Pagination
+  const totalPages = Math.ceil(filteredAndSortedData.length / itemsPerPage);
+  const paginatedData = filteredAndSortedData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // Sort indicator component
+  const SortIndicator = ({ column }: { column: SortKey }) => {
+    return (
+      <ChevronUpDownIcon
+        className={`h-4 w-4 inline-block ml-1 ${
+          sortConfig.key === column ? "text-[#0fd354]" : "text-gray-400"
+        }`}
+      />
+    );
+  };
+
+  const handleExport = () => {
+    // Placeholder for export functionality
+    alert("Export functionality will be implemented here");
+  };
+
+  // Table columns definition
+  const columns = [
+    { key: "name", label: "Name", sortable: true },
+    { key: "date", label: "Date", sortable: true },
+    { key: "activity", label: "Activity", sortable: true },
+    { key: "status", label: "Status", sortable: true },
+  ];
+
+  return (
+    <div className="flex min-h-screen bg-gray-50 flex-row">
+      {/* Sidebar and overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-20 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      <aside
+        className={`fixed lg:static inset-y-0 left-0 z-30 w-64 transform 
+          ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+          lg:translate-x-0 lg:w-64 transition-transform duration-300 ease-in-out
+          bg-[#16113a] text-white`}
+      >
+        <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+      </aside>
+
+      {/* Main Content Area */}
+      <main className="flex-1 min-w-0 overflow-hidden flex flex-col">
+        {/* Mobile Header with Menu Button */}
+        <div className="sticky top-0 z-10 lg:hidden bg-white border-b border-gray-200 px-4 py-2">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="p-2 rounded-md text-gray-600 hover:bg-gray-100"
+            aria-label="Open menu"
+          >
+            <Bars3Icon className="h-6 w-6" />
+          </button>
+        </div>
+
+        {/* Page Content */}
+        <div className="p-4 sm:p-6 lg:p-8 flex-1 flex flex-col">
+          <div className="max-w-[1600px] mx-auto w-full flex-1 flex flex-col">
+            {/* Header */}
+            <div className="mb-8">
+              <h1 className="text-2xl font-bold text-gray-900">Reports</h1>
+              <p className="mt-2 text-sm text-gray-600">
+                View and analyze your business activities
+              </p>
+            </div>
+
+            {/* Filters and Search Section */}
+            <div className="mb-6 space-y-4 md:space-y-0 md:flex md:items-center md:justify-between">
+              {/* Search Bar */}
+              <Input
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search reports..."
+                icon={<MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />}
+                className="flex-1 max-w-md"
+              />
+
+              {/* Filter Group */}
+              <div className="flex flex-wrap gap-3">
+                {/* Date Filter */}
+                <div className="flex items-center">
+                  <Select
+                    value={dateFilter}
+                    onChange={(e) => setDateFilter(e.target.value)}
+                    options={[
+                      { value: "all", label: "All Dates" },
+                      { value: "2024-03", label: "March 2024" },
+                      { value: "2024-02", label: "February 2024" },
+                      { value: "2024-01", label: "January 2024" },
+                    ]}
+                    icon={<FunnelIcon className="h-5 w-5 text-gray-400" />}
+                  />
+                </div>
+
+                {/* Status Filter */}
+                <div className="flex items-center">
+                  <Select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    options={[
+                      { value: "all", label: "All Status" },
+                      { value: "Completed", label: "Completed" },
+                      { value: "Pending", label: "Pending" },
+                      { value: "Failed", label: "Failed" },
+                      { value: "Processing", label: "Processing" },
+                    ]}
+                  />
+                </div>
+
+                {/* Export Button */}
+                <button
+                  onClick={handleExport}
+                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-[#0fd354] hover:bg-[#0abd48] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0fd354]"
+                >
+                  <ArrowDownTrayIcon className="h-5 w-5 mr-2" />
+                  Export
+                </button>
+              </div>
+            </div>
+
+            {/* Table Section */}
+            <Table
+              columns={columns}
+              data={paginatedData}
+              onSort={(key) => handleSort(key as SortKey)}
+              sortConfig={sortConfig}
+            />
+          </div>
+        </div>
+        {/* Pagination Controls at the bottom of the main content */}
+        <div className="w-full flex justify-center mt-8 mb-8">
+          <nav className="relative z-0 inline-flex rounded-md -space-x-px">
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className={`mx-1 flex items-center justify-center w-9 h-9 rounded-full border text-base font-medium transition-colors duration-150
+                ${
+                  currentPage === 1
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200"
+                    : "bg-transparent text-gray-500 border-gray-300 hover:bg-gray-50"
+                }
+              `}
+              aria-label="Previous page"
+            >
+              <ChevronLeftIcon className="h-5 w-5" />
+            </button>
+            {/* Page Numbers */}
+            {[...Array(totalPages)].map((_, idx) => (
+              <button
+                key={idx + 1}
+                onClick={() => setCurrentPage(idx + 1)}
+                className={`relative inline-flex items-center px-4 py-2 text-base font-medium mx-1 transition-colors duration-150
+                  ${
+                    currentPage === idx + 1
+                      ? "text-gray-900 font-semibold"
+                      : "text-gray-500 hover:text-gray-900"
+                  }`}
+                style={{ background: "none", border: "none", borderRadius: 0 }}
+              >
+                {idx + 1}
+              </button>
+            ))}
+            <button
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
+              disabled={currentPage === totalPages}
+              className={`mx-1 flex items-center justify-center w-9 h-9 rounded-full border text-base font-medium transition-colors duration-150
+                ${
+                  currentPage === totalPages
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200"
+                    : "bg-transparent text-gray-500 border-gray-300 hover:bg-gray-50"
+                }
+              `}
+              aria-label="Next page"
+            >
+              <ChevronRightIcon className="h-5 w-5" />
+            </button>
+          </nav>
+        </div>
+      </main>
+    </div>
+  );
+}
