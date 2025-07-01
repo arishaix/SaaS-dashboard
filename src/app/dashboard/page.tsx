@@ -13,10 +13,20 @@ import {
   UserIcon,
 } from "@heroicons/react/24/outline";
 import Card from "@/components/Card";
-import ChartPlaceholder from "@/components/ChartPlaceholder";
+import SalesLineChart from "@/components/charts/SalesLineChart";
+import UserGrowthBarChart from "@/components/charts/UserGrowthBarChart";
+import RevenueAreaChart from "@/components/charts/RevenueAreaChart";
+import UserDistributionPieChart from "@/components/charts/UserDistributionPieChart";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Loader from "@/components/Loader";
+
+type DashboardStats = {
+  sales: any[];
+  userGrowth: any[];
+  revenue: any[];
+  userDistribution: any[];
+};
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
@@ -25,6 +35,12 @@ export default function DashboardPage() {
   const [loadingStats, setLoadingStats] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [newSignups, setNewSignups] = useState<number>(0);
+  const [chartStats, setChartStats] = useState<DashboardStats>({
+    sales: [],
+    userGrowth: [],
+    revenue: [],
+    userDistribution: [],
+  });
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -51,6 +67,26 @@ export default function DashboardPage() {
       }
     }
     fetchStats();
+  }, []);
+
+  useEffect(() => {
+    async function fetchChartStats() {
+      const res = await fetch("/api/dashboard-stats");
+      const data = await res.json();
+      const statsByType: DashboardStats = {
+        sales: [],
+        userGrowth: [],
+        revenue: [],
+        userDistribution: [],
+      };
+      data.stats.forEach((stat: any) => {
+        if (stat.type && stat.type in statsByType) {
+          statsByType[stat.type as keyof DashboardStats] = stat.data;
+        }
+      });
+      setChartStats(statsByType);
+    }
+    fetchChartStats();
   }, []);
 
   if (status === "loading" || status === "unauthenticated") {
@@ -154,27 +190,32 @@ export default function DashboardPage() {
                 ))}
               </div>
 
-              {/* Charts Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 w-full">
-                {/* Line Chart */}
+              {/* Analytics Charts Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-10 w-full">
                 <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100 w-full">
                   <h3 className="text-xl font-bold text-gray-800 mb-4">
-                    User Activity Over Time
+                    Sales Over Time
                   </h3>
-                  <ChartPlaceholder
-                    title="Line Chart Placeholder"
-                    description="User activity data will appear here."
-                  />
+                  <SalesLineChart data={chartStats.sales} />
                 </div>
-
-                {/* Pie Chart */}
+                <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100 w-full">
+                  <h3 className="text-xl font-bold text-gray-800 mb-4">
+                    User Growth
+                  </h3>
+                  <UserGrowthBarChart data={chartStats.userGrowth} />
+                </div>
+                <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100 w-full">
+                  <h3 className="text-xl font-bold text-gray-800 mb-4">
+                    Revenue Trend
+                  </h3>
+                  <RevenueAreaChart data={chartStats.revenue} />
+                </div>
                 <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100 w-full">
                   <h3 className="text-xl font-bold text-gray-800 mb-4">
                     User Distribution
                   </h3>
-                  <ChartPlaceholder
-                    title="Pie Chart Placeholder"
-                    description="User distribution data will appear here."
+                  <UserDistributionPieChart
+                    data={chartStats.userDistribution}
                   />
                 </div>
               </div>
