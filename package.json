@@ -10,7 +10,12 @@
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
+    "@types/bcrypt": "^5.0.2",
+    "bcrypt": "^6.0.0",
+    "mongodb": "^6.17.0",
+    "mongoose": "^8.16.1",
     "next": "15.3.4",
+    "next-auth": "^4.24.11",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

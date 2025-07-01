@@ -2,9 +2,11 @@
 import Button from "./Button";
 import Link from "next/link";
 import { useState } from "react";
+import { useSession, signOut } from "next-auth/react";
 
 export default function Topbar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { data: session, status } = useSession();
   return (
     <header className="w-full flex flex-col sm:flex-row items-center justify-between px-4 sm:px-8 py-4 sm:py-6 shadow-md bg-[#16113a]">
       <div className="flex w-full sm:w-auto items-center justify-between">

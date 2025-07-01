@@ -13,11 +13,15 @@ import {
 } from "@heroicons/react/24/outline";
 import Card from "@/components/Card";
 import ChartPlaceholder from "@/components/ChartPlaceholder";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import Loader from "@/components/Loader";
 
 export default function DashboardPage() {
-  const [sidebarOpen, setSidebarOpen] = useState(false); // Default to closed on mobile
+  const [sidebarOpen, setSidebarOpen] = useState(false); 
+  const { data: session, status } = useSession();
+  const router = useRouter();
 
-  // Handle responsive sidebar behavior
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 1024) {
@@ -27,13 +31,21 @@ export default function DashboardPage() {
       }
     };
 
-    // Initial check
     handleResize();
 
-    // Add event listener
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.replace("/login");
+    }
+  }, [status, router]);
+
+  if (status === "loading" || status === "unauthenticated") {
+    return <Loader />;
+  }
 
   const statsCards = [
     {

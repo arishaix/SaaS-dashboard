@@ -1,22 +1,18 @@
 "use client";
 import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
+import { signOut, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import Loader from "@/components/Loader";
 
 export default function SettingsPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notifications, setNotifications] = useState(true);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const { data: session, status } = useSession();
+  const router = useRouter();
 
-  // Dummy user data
-  const user = {
-    avatar:
-      "https://ui-avatars.com/api/?name=John+Doe&background=0D8ABC&color=fff",
-    name: "John Doe",
-    email: "john.doe@example.com",
-  };
-
-  // Responsive sidebar behavior (same as dashboard/report)
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 1024) {
@@ -29,6 +25,16 @@ export default function SettingsPage() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.replace("/login");
+    }
+  }, [status, router]);
+
+  if (status === "loading" || status === "unauthenticated") {
+    return <Loader />;
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-50 flex-row">
@@ -74,13 +80,17 @@ export default function SettingsPage() {
             {/* Profile Info */}
             <section className="flex items-center gap-6 border-b pb-6">
               <img
-                src={user.avatar}
+                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
+                  session?.user?.name || "User"
+                )}&background=0D8ABC&color=fff`}
                 alt="Avatar"
                 className="w-20 h-20 rounded-full border-4 border-gray-200 shadow"
               />
               <div>
-                <h2 className="text-xl font-bold text-gray-900">{user.name}</h2>
-                <p className="text-gray-500">{user.email}</p>
+                <h2 className="text-xl font-bold text-gray-900">
+                  {session?.user?.name || "-"}
+                </h2>
+                <p className="text-gray-500">{session?.user?.email || "-"}</p>
               </div>
             </section>
 
@@ -117,14 +127,15 @@ export default function SettingsPage() {
                 <div className="md:col-span-2 flex justify-end gap-4 items-center">
                   <button
                     type="submit"
-                    className="px-6 py-2 bg-[#0fd354] text-white rounded-lg shadow hover:bg-green-600 transition"
+                    className="px-6 py-2 bg-[#16113a] text-white rounded-lg shadow hover:bg-[#23205a] transition"
                   >
                     Change Password
                   </button>
                   <span className="mx-2 text-gray-300">|</span>
                   <button
                     type="button"
-                    className="px-6 py-2 bg-[#0fd354] text-white rounded-lg shadow hover:bg-green-600 transition"
+                    className="px-6 py-2 bg-[#16113a] text-white rounded-lg shadow hover:bg-[#23205a] transition"
+                    onClick={() => signOut({ callbackUrl: "/login" })}
                   >
                     Logout
                   </button>
@@ -147,8 +158,8 @@ export default function SettingsPage() {
                     type="button"
                     aria-pressed={notifications}
                     onClick={() => setNotifications((v) => !v)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#0fd354] ${
-                      notifications ? "bg-[#0fd354]" : "bg-gray-300"
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#16113a] ${
+                      notifications ? "bg-[#16113a]" : "bg-gray-300"
                     }`}
                   >
                     <span

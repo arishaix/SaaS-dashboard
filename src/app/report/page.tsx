@@ -13,6 +13,9 @@ import Sidebar from "@/components/Sidebar";
 import Table from "@/components/Table";
 import Input from "@/components/Input";
 import Select from "@/components/Select";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import Loader from "@/components/Loader";
 
 type SortKey = "name" | "date" | "activity" | "status";
 
@@ -24,7 +27,6 @@ interface ReportItem {
   status: string;
 }
 
-// Sample data for the table
 const reportData: ReportItem[] = [
   {
     id: 1,
@@ -64,6 +66,8 @@ const reportData: ReportItem[] = [
 ];
 
 export default function ReportPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [dateFilter, setDateFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -78,7 +82,16 @@ export default function ReportPage() {
   });
   const itemsPerPage = 5;
 
-  // Handle responsive sidebar behavior
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.replace("/login");
+    }
+  }, [status, router]);
+
+  if (status === "loading" || status === "unauthenticated") {
+    return <Loader />;
+  }
+
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 1024) {
@@ -88,15 +101,12 @@ export default function ReportPage() {
       }
     };
 
-    // Initial check
     handleResize();
 
-    // Add event listener
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Sorting function
   const handleSort = (key: SortKey) => {
     setSortConfig((prevSort) => ({
       key,
@@ -105,7 +115,6 @@ export default function ReportPage() {
     }));
   };
 
-  // Filter and sort data
   const filteredAndSortedData = reportData
     .filter((item) => {
       const matchesSearch = Object.values(item)
@@ -127,14 +136,12 @@ export default function ReportPage() {
       return 0;
     });
 
-  // Pagination
   const totalPages = Math.ceil(filteredAndSortedData.length / itemsPerPage);
   const paginatedData = filteredAndSortedData.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  // Sort indicator component
   const SortIndicator = ({ column }: { column: SortKey }) => {
     return (
       <ChevronUpDownIcon
@@ -146,11 +153,9 @@ export default function ReportPage() {
   };
 
   const handleExport = () => {
-    // Placeholder for export functionality
     alert("Export functionality will be implemented here");
   };
 
-  // Table columns definition
   const columns = [
     { key: "name", label: "Name", sortable: true },
     { key: "date", label: "Date", sortable: true },
@@ -160,7 +165,6 @@ export default function ReportPage() {
 
   return (
     <div className="flex min-h-screen bg-gray-50 flex-row">
-      {/* Sidebar and overlay */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-20 lg:hidden"
@@ -175,9 +179,8 @@ export default function ReportPage() {
         <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
       </aside>
 
-      {/* Main Content Area */}
       <main className="flex-1 min-w-0 overflow-hidden flex flex-col">
-        {/* Mobile Header with Menu Button */}
+      
         <div className="sticky top-0 z-10 lg:hidden bg-white border-b border-gray-200 px-4 py-2">
           <button
             onClick={() => setSidebarOpen(true)}
@@ -188,7 +191,6 @@ export default function ReportPage() {
           </button>
         </div>
 
-        {/* Page Content */}
         <div className="p-4 sm:p-6 lg:p-8 flex-1 flex flex-col">
           <div className="max-w-[1600px] mx-auto w-full flex-1 flex flex-col">
             {/* Header */}
@@ -262,7 +264,7 @@ export default function ReportPage() {
             />
           </div>
         </div>
-        {/* Pagination Controls at the bottom of the main content */}
+       
         <div className="w-full flex justify-center mt-8 mb-8">
           <nav className="relative z-0 inline-flex rounded-md -space-x-px">
             <button
