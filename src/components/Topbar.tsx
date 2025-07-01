@@ -2,7 +2,7 @@
 import Button from "./Button";
 import Link from "next/link";
 import { useState } from "react";
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
 
 export default function Topbar() {
   const [menuOpen, setMenuOpen] = useState(false);
