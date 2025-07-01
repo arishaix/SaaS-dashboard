@@ -16,29 +16,29 @@ export default function Card({
   icon: Icon,
 }: CardProps) {
   return (
-    <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
-      <div className="flex items-center justify-between mb-3">
+    <div className="bg-white rounded-2xl shadow-md p-8 border border-gray-100">
+      <div className="flex items-center justify-between mb-6">
         <div
-          className={`p-2 rounded-lg ${
+          className={`p-4 rounded-xl ${
             trend === "up" ? "bg-green-100" : "bg-red-100"
           }`}
         >
           <Icon
-            className={`h-5 w-5 ${
+            className={`h-8 w-8 ${
               trend === "up" ? "text-green-600" : "text-red-600"
             }`}
           />
         </div>
         <span
-          className={`text-sm font-medium ${
+          className={`text-lg font-semibold ${
             trend === "up" ? "text-green-600" : "text-red-600"
           }`}
         >
           {change}
         </span>
       </div>
-      <h3 className="text-gray-500 text-sm font-medium">{title}</h3>
-      <p className="text-xl font-bold text-gray-800 mt-1">{value}</p>
+      <h3 className="text-gray-500 text-xl font-semibold mb-2">{title}</h3>
+      <p className="text-3xl font-extrabold text-gray-800 mt-1">{value}</p>
     </div>
   );
 }

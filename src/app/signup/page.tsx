@@ -4,6 +4,7 @@ import { UserIcon, AtSymbolIcon, KeyIcon } from "@heroicons/react/24/solid";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 
 export default function SignupPage() {
   const [name, setName] = useState("");
@@ -44,7 +45,12 @@ export default function SignupPage() {
     });
     setLoading(false);
     if (res.ok) {
-      router.push("/login");
+      await signIn("credentials", {
+        redirect: false,
+        email,
+        password,
+      });
+      router.push("/dashboard");
     } else {
       const data = await res.json();
       if (data.error?.toLowerCase().includes("user already exists"))

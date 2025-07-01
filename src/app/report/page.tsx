@@ -8,6 +8,7 @@ import {
   ChevronUpDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import Sidebar from "@/components/Sidebar";
 import Table from "@/components/Table";
@@ -71,7 +72,6 @@ export default function ReportPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [dateFilter, setDateFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [sortConfig, setSortConfig] = useState<{
     key: SortKey | null;
@@ -81,7 +81,9 @@ export default function ReportPage() {
     direction: "asc",
   });
   const itemsPerPage = 5;
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  // Session check effect
   useEffect(() => {
     if (status === "unauthenticated") {
       router.replace("/login");
@@ -91,21 +93,6 @@ export default function ReportPage() {
   if (status === "loading" || status === "unauthenticated") {
     return <Loader />;
   }
-
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth >= 1024) {
-        setSidebarOpen(true);
-      } else {
-        setSidebarOpen(false);
-      }
-    };
-
-    handleResize();
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
 
   const handleSort = (key: SortKey) => {
     setSortConfig((prevSort) => ({
@@ -165,32 +152,47 @@ export default function ReportPage() {
 
   return (
     <div className="flex min-h-screen bg-gray-50 flex-row">
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-20 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-      <aside
-        className={`fixed lg:static inset-y-0 left-0 z-30 transition-all duration-300
-          ${sidebarOpen ? "w-64" : "w-16"}
-          bg-[#16113a] text-white overflow-hidden`}
-      >
-        <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+      {/* Sidebar for desktop */}
+      <aside className="hidden lg:block lg:static inset-y-0 left-0 z-30 transition-all duration-300 w-64 bg-[#16113a] text-white overflow-hidden">
+        <Sidebar />
       </aside>
-
+      {/* Sidebar overlay for mobile */}
+      {sidebarOpen && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+          <aside className="fixed inset-y-0 left-0 z-50 w-64 bg-[#16113a] text-white overflow-hidden transition-all duration-300 lg:hidden">
+            <div className="flex items-center justify-between px-4 py-4 border-b border-[#23205a]">
+              <span className="text-xl font-bold" style={{ color: "#0fd354" }}>
+                SaaS Dashboard
+              </span>
+              <button
+                onClick={() => setSidebarOpen(false)}
+                aria-label="Close sidebar"
+              >
+                <XMarkIcon className="h-7 w-7 text-white" />
+              </button>
+            </div>
+            <Sidebar />
+          </aside>
+        </>
+      )}
       <main className="flex-1 min-w-0 overflow-hidden flex flex-col">
-      
-        <div className="sticky top-0 z-10 lg:hidden bg-white border-b border-gray-200 px-4 py-2">
+        {/* Mobile header with hamburger menu */}
+        <div className="lg:hidden flex items-center px-4 py-3 border-b border-gray-200 bg-white sticky top-0 z-30">
           <button
             onClick={() => setSidebarOpen(true)}
             className="p-2 rounded-md text-gray-600 hover:bg-gray-100"
-            aria-label="Open menu"
+            aria-label="Open sidebar"
           >
-            <Bars3Icon className="h-6 w-6" />
+            <Bars3Icon className="h-7 w-7" />
           </button>
+          <span className="ml-4 text-lg font-bold" style={{ color: "#16113a" }}>
+            SaaS Dashboard
+          </span>
         </div>
-
         <div className="p-4 sm:p-6 lg:p-8 flex-1 flex flex-col">
           <div className="max-w-[1600px] mx-auto w-full flex-1 flex flex-col">
             {/* Header */}
@@ -264,7 +266,7 @@ export default function ReportPage() {
             />
           </div>
         </div>
-       
+
         <div className="w-full flex justify-center mt-8 mb-8">
           <nav className="relative z-0 inline-flex rounded-md -space-x-px">
             <button
