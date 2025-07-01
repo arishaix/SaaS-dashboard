@@ -17,6 +17,7 @@ import Select from "@/components/Select";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Loader from "@/components/Loader";
+import ExportButtons from "@/components/ExportButtons";
 
 type SortKey = "name" | "date" | "activity" | "status";
 
@@ -27,44 +28,6 @@ interface ReportItem {
   activity: string;
   status: string;
 }
-
-const reportData: ReportItem[] = [
-  {
-    id: 1,
-    name: "John Doe",
-    date: "2024-03-15",
-    activity: "Login",
-    status: "Completed",
-  },
-  {
-    id: 2,
-    name: "Jane Smith",
-    date: "2024-03-15",
-    activity: "File Upload",
-    status: "Pending",
-  },
-  {
-    id: 3,
-    name: "Mike Johnson",
-    date: "2024-03-14",
-    activity: "Data Export",
-    status: "Failed",
-  },
-  {
-    id: 4,
-    name: "Sarah Williams",
-    date: "2024-03-14",
-    activity: "Profile Update",
-    status: "Completed",
-  },
-  {
-    id: 5,
-    name: "Tom Brown",
-    date: "2024-03-13",
-    activity: "Payment",
-    status: "Processing",
-  },
-];
 
 export default function ReportPage() {
   const { data: session, status } = useSession();
@@ -82,6 +45,8 @@ export default function ReportPage() {
   });
   const itemsPerPage = 5;
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [reportData, setReportData] = useState<ReportItem[]>([]);
+  const [loadingReports, setLoadingReports] = useState(true);
 
   // Session check effect
   useEffect(() => {
@@ -90,7 +55,33 @@ export default function ReportPage() {
     }
   }, [status, router]);
 
-  if (status === "loading" || status === "unauthenticated") {
+  useEffect(() => {
+    async function fetchReports() {
+      setLoadingReports(true);
+      try {
+        const res = await fetch("/api/reports");
+        const data = await res.json();
+        if (Array.isArray(data.reports)) {
+          setReportData(
+            data.reports.map((item: any, idx: number) => ({
+              id: item._id || idx,
+              name: item.name,
+              date: item.date,
+              activity: item.activity,
+              status: item.status,
+            }))
+          );
+        }
+      } catch (err) {
+        setReportData([]);
+      } finally {
+        setLoadingReports(false);
+      }
+    }
+    fetchReports();
+  }, []);
+
+  if (status === "loading" || status === "unauthenticated" || loadingReports) {
     return <Loader />;
   }
 
@@ -137,10 +128,6 @@ export default function ReportPage() {
         }`}
       />
     );
-  };
-
-  const handleExport = () => {
-    alert("Export functionality will be implemented here");
   };
 
   const columns = [
@@ -246,14 +233,8 @@ export default function ReportPage() {
                   />
                 </div>
 
-                {/* Export Button */}
-                <button
-                  onClick={handleExport}
-                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-[#0fd354] hover:bg-[#0abd48] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0fd354]"
-                >
-                  <ArrowDownTrayIcon className="h-5 w-5 mr-2" />
-                  Export
-                </button>
+                {/* Export Buttons */}
+                <ExportButtons data={filteredAndSortedData} columns={columns} />
               </div>
             </div>
 
