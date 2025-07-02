@@ -32,6 +32,7 @@ export default function DashboardPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [stats, setStats] = useState<any>(null);
+  const [prevStats, setPrevStats] = useState<any>(null);
   const [loadingStats, setLoadingStats] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [newSignups, setNewSignups] = useState<number>(0);
@@ -54,8 +55,11 @@ export default function DashboardPage() {
       try {
         const res = await fetch("/api/stats");
         const data = await res.json();
-        if (data.stats && data.stats.length > 0) {
-          setStats(data.stats[0]); // latest stats
+        if (data.latest) {
+          setStats(data.latest);
+        }
+        if (data.previous) {
+          setPrevStats(data.previous);
         }
         if (typeof data.newSignups === "number") {
           setNewSignups(data.newSignups);
@@ -93,27 +97,44 @@ export default function DashboardPage() {
     return <Loader />;
   }
 
+  function getPercentChange(current: number, previous: number) {
+    if (previous === 0) return current === 0 ? 0 : 100;
+    return ((current - previous) / Math.abs(previous)) * 100;
+  }
+
   const statsCards = stats
     ? [
         {
           title: "Revenue",
           value: `$${stats.revenue}`,
-          change: "+0%",
-          trend: "up",
+          change:
+            prevStats && typeof prevStats.revenue === "number"
+              ? `${getPercentChange(stats.revenue, prevStats.revenue).toFixed(
+                  1
+                )}%`
+              : "0%",
+          trend:
+            prevStats && stats.revenue >= prevStats.revenue ? "up" : "down",
           icon: CurrencyDollarIcon,
         },
         {
           title: "Sales",
           value: `${stats.sales}`,
-          change: "+0%",
-          trend: "up",
+          change:
+            prevStats && typeof prevStats.sales === "number"
+              ? `${getPercentChange(stats.sales, prevStats.sales).toFixed(1)}%`
+              : "0%",
+          trend: prevStats && stats.sales >= prevStats.sales ? "up" : "down",
           icon: ChartBarIcon,
         },
         {
           title: "Users",
           value: `${stats.users}`,
-          change: "+0%",
-          trend: "up",
+          change:
+            prevStats && typeof prevStats.users === "number"
+              ? `${getPercentChange(stats.users, prevStats.users).toFixed(1)}%`
+              : "0%",
+          trend: prevStats && stats.users >= prevStats.users ? "up" : "down",
           icon: UserGroupIcon,
         },
         {
@@ -127,12 +148,10 @@ export default function DashboardPage() {
     : [];
 
   return (
-    <div className="flex min-h-screen bg-gray-50 flex-row">
-      {/* Sidebar for desktop */}
+    <div className="flex h-screen bg-gray-50 flex-row">
       <aside className="hidden lg:block lg:static inset-y-0 left-0 z-30 transition-all duration-300 w-64 bg-[#16113a] text-white overflow-hidden">
         <Sidebar />
       </aside>
-      {/* Sidebar overlay for mobile */}
       {sidebarOpen && (
         <>
           <div
@@ -155,8 +174,7 @@ export default function DashboardPage() {
           </aside>
         </>
       )}
-      <main className="flex-1 min-w-0 overflow-hidden flex flex-col">
-        {/* Mobile header with hamburger menu */}
+      <main className="flex-1 min-w-0 overflow-hidden flex flex-col h-screen overflow-y-auto">
         <div className="lg:hidden flex items-center px-4 py-3 border-b border-gray-200 bg-white sticky top-0 z-30">
           <button
             onClick={() => setSidebarOpen(true)}
@@ -176,7 +194,6 @@ export default function DashboardPage() {
             </div>
           ) : (
             <>
-              {/* Stats Cards Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 w-full">
                 {statsCards.map((card, index) => (
                   <Card
@@ -190,7 +207,6 @@ export default function DashboardPage() {
                 ))}
               </div>
 
-              {/* Analytics Charts Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-10 w-full">
                 <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100 w-full">
                   <h3 className="text-xl font-bold text-gray-800 mb-4">

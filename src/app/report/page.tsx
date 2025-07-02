@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import {
   MagnifyingGlassIcon,
   FunnelIcon,
-  ArrowDownTrayIcon,
   Bars3Icon,
   ChevronUpDownIcon,
   ChevronLeftIcon,
@@ -18,6 +17,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Loader from "@/components/Loader";
 import ExportButtons from "@/components/ExportButtons";
+import DatasetSelector from "@/components/reports/DatasetSelector";
 
 type SortKey = "name" | "date" | "activity" | "status";
 
@@ -28,6 +28,29 @@ interface ReportItem {
   activity: string;
   status: string;
 }
+
+const columnsMap = {
+  users: [
+    { key: "name", label: "Name" },
+    { key: "email", label: "Email" },
+    { key: "role", label: "Role" },
+  ],
+  sales: [
+    { key: "orderId", label: "Order ID" },
+    { key: "amount", label: "Amount" },
+    { key: "date", label: "Date" },
+  ],
+  reports: [
+    { key: "name", label: "Name" },
+    { key: "date", label: "Date" },
+    { key: "activity", label: "Activity" },
+    { key: "status", label: "Status" },
+  ],
+  signups: [
+    { key: "name", label: "Name" },
+    { key: "email", label: "Email" },
+  ],
+};
 
 export default function ReportPage() {
   const { data: session, status } = useSession();
@@ -45,10 +68,11 @@ export default function ReportPage() {
   });
   const itemsPerPage = 5;
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [reportData, setReportData] = useState<ReportItem[]>([]);
+  const [reportData, setReportData] = useState<any[]>([]);
   const [loadingReports, setLoadingReports] = useState(true);
+  type DatasetKey = "users" | "sales" | "reports" | "signups";
+  const [selectedDataset, setSelectedDataset] = useState<DatasetKey>("reports");
 
-  // Session check effect
   useEffect(() => {
     if (status === "unauthenticated") {
       router.replace("/login");
@@ -56,32 +80,30 @@ export default function ReportPage() {
   }, [status, router]);
 
   useEffect(() => {
-    async function fetchReports() {
-      setLoadingReports(true);
-      try {
-        const res = await fetch("/api/reports");
-        const data = await res.json();
-        if (Array.isArray(data.reports)) {
-          setReportData(
-            data.reports.map((item: any, idx: number) => ({
-              id: item._id || idx,
-              name: item.name,
-              date: item.date,
-              activity: item.activity,
-              status: item.status,
-            }))
-          );
-        }
-      } catch (err) {
-        setReportData([]);
-      } finally {
+    setLoadingReports(true);
+    let endpoint = "";
+    if (selectedDataset === "users") endpoint = "/api/users";
+    else if (selectedDataset === "sales") endpoint = "/api/sales";
+    else if (selectedDataset === "reports") endpoint = "/api/reports";
+    else if (selectedDataset === "signups") endpoint = "/api/signups";
+    fetch(endpoint)
+      .then((res) => res.json())
+      .then((data) => {
+        if (selectedDataset === "users") setReportData(data.users || []);
+        else if (selectedDataset === "sales") setReportData(data.sales || []);
+        else if (selectedDataset === "reports")
+          setReportData(data.reports || []);
+        else if (selectedDataset === "signups")
+          setReportData(data.signups || []);
         setLoadingReports(false);
-      }
-    }
-    fetchReports();
-  }, []);
+      })
+      .catch(() => {
+        setReportData([]);
+        setLoadingReports(false);
+      });
+  }, [selectedDataset]);
 
-  if (status === "loading" || status === "unauthenticated" || loadingReports) {
+  if (status === "loading" || status === "unauthenticated") {
     return <Loader />;
   }
 
@@ -100,9 +122,11 @@ export default function ReportPage() {
         .toLowerCase()
         .includes(searchTerm.toLowerCase());
       const matchesDate =
-        dateFilter === "all" || item.date.includes(dateFilter);
+        dateFilter === "all" ||
+        (item.date ? item.date.includes(dateFilter) : true);
       const matchesStatus =
-        statusFilter === "all" || item.status === statusFilter;
+        statusFilter === "all" ||
+        (item.status ? item.status === statusFilter : true);
       return matchesSearch && matchesDate && matchesStatus;
     })
     .sort((a, b) => {
@@ -130,12 +154,7 @@ export default function ReportPage() {
     );
   };
 
-  const columns = [
-    { key: "name", label: "Name", sortable: true },
-    { key: "date", label: "Date", sortable: true },
-    { key: "activity", label: "Activity", sortable: true },
-    { key: "status", label: "Status", sortable: true },
-  ];
+  const columns = columnsMap[selectedDataset];
 
   return (
     <div className="flex min-h-screen bg-gray-50 flex-row">
@@ -143,13 +162,13 @@ export default function ReportPage() {
       <aside className="hidden lg:block lg:static inset-y-0 left-0 z-30 transition-all duration-300 w-64 bg-[#16113a] text-white overflow-hidden">
         <Sidebar />
       </aside>
-      {/* Sidebar overlay for mobile */}
       {sidebarOpen && (
         <>
           <div
             className="fixed inset-0 bg-black/50 z-40 lg:hidden"
             onClick={() => setSidebarOpen(false)}
           />
+          {/* Sidebar overlay for mobile */}
           <aside className="fixed inset-y-0 left-0 z-50 w-64 bg-[#16113a] text-white overflow-hidden transition-all duration-300 lg:hidden">
             <div className="flex items-center justify-between px-4 py-4 border-b border-[#23205a]">
               <span className="text-xl font-bold" style={{ color: "#0fd354" }}>
@@ -167,7 +186,6 @@ export default function ReportPage() {
         </>
       )}
       <main className="flex-1 min-w-0 overflow-hidden flex flex-col">
-        {/* Mobile header with hamburger menu */}
         <div className="lg:hidden flex items-center px-4 py-3 border-b border-gray-200 bg-white sticky top-0 z-30">
           <button
             onClick={() => setSidebarOpen(true)}
@@ -176,13 +194,13 @@ export default function ReportPage() {
           >
             <Bars3Icon className="h-7 w-7" />
           </button>
+
           <span className="ml-4 text-lg font-bold" style={{ color: "#16113a" }}>
             SaaS Dashboard
           </span>
         </div>
         <div className="p-4 sm:p-6 lg:p-8 flex-1 flex flex-col">
           <div className="max-w-[1600px] mx-auto w-full flex-1 flex flex-col">
-            {/* Header */}
             <div className="mb-8">
               <h1 className="text-2xl font-bold text-gray-900">Reports</h1>
               <p className="mt-2 text-sm text-gray-600">
@@ -190,9 +208,16 @@ export default function ReportPage() {
               </p>
             </div>
 
-            {/* Filters and Search Section */}
+            <div className="mb-6">
+              <DatasetSelector
+                selectedDataset={selectedDataset}
+                setSelectedDataset={(ds) =>
+                  setSelectedDataset(ds as DatasetKey)
+                }
+              />
+            </div>
+
             <div className="mb-6 space-y-4 md:space-y-0 md:flex md:items-center md:justify-between">
-              {/* Search Bar */}
               <Input
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -201,9 +226,7 @@ export default function ReportPage() {
                 className="flex-1 max-w-md"
               />
 
-              {/* Filter Group */}
               <div className="flex flex-wrap gap-3">
-                {/* Date Filter */}
                 <div className="flex items-center">
                   <Select
                     value={dateFilter}
@@ -218,7 +241,6 @@ export default function ReportPage() {
                   />
                 </div>
 
-                {/* Status Filter */}
                 <div className="flex items-center">
                   <Select
                     value={statusFilter}
@@ -233,18 +255,23 @@ export default function ReportPage() {
                   />
                 </div>
 
-                {/* Export Buttons */}
                 <ExportButtons data={filteredAndSortedData} columns={columns} />
               </div>
             </div>
 
-            {/* Table Section */}
-            <Table
-              columns={columns}
-              data={paginatedData}
-              onSort={(key) => handleSort(key as SortKey)}
-              sortConfig={sortConfig}
-            />
+            <div className="relative">
+              {loadingReports && (
+                <div className="absolute inset-0 flex items-center justify-center bg-white/70 z-10">
+                  <Loader small />
+                </div>
+              )}
+              <Table
+                columns={columns}
+                data={paginatedData}
+                sortConfig={sortConfig}
+                onSort={(key) => handleSort(key as SortKey)}
+              />
+            </div>
           </div>
         </div>
 
@@ -264,7 +291,6 @@ export default function ReportPage() {
             >
               <ChevronLeftIcon className="h-5 w-5" />
             </button>
-            {/* Page Numbers */}
             {[...Array(totalPages)].map((_, idx) => (
               <button
                 key={idx + 1}

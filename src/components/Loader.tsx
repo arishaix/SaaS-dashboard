@@ -1,10 +1,16 @@
 "use client";
 
-export default function Loader() {
+export default function Loader({ small = false }: { small?: boolean }) {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen animate-fade-in">
+    <div
+      className={`flex flex-col items-center justify-center animate-fade-in${
+        small ? "" : " min-h-screen"
+      }`}
+    >
       <svg
-        className="animate-spin h-12 w-12 text-[#16113a] drop-shadow-lg"
+        className={`animate-spin ${
+          small ? "h-6 w-6" : "h-12 w-12"
+        } text-[#16113a] drop-shadow-lg`}
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
         viewBox="0 0 24 24"
