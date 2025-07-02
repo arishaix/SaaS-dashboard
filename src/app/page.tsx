@@ -24,7 +24,7 @@ export default function Home() {
           Your Business at a Glance
         </h2>
         <p className="text-xl sm:text-2xl md:text-3xl mb-10 text-gray-900">
-          Custom dashboards for real-time insights.
+          Custom dashboards for business insights.
         </p>
         <Link href="/signup">
           <Button

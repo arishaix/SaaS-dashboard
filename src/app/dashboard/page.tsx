@@ -264,7 +264,7 @@ export default function DashboardPage() {
             <>
               {/* Draggable Stat Cards for all roles, filtered by role */}
               {!isStaff(session) && (
-                <div className="mb-4">
+                <div className={`${isManager(session) ? "mb-39" : "mb-4"}`}>
                   {layoutLoaded && (
                     <ResponsiveGridLayout
                       className="layout"
@@ -273,19 +273,31 @@ export default function DashboardPage() {
                       layouts={{
                         lg:
                           userLayout.length > 0
-                            ? userLayout
-                            : (isAdmin(session)
-                                ? statsCards
-                                : isManager(session)
-                                ? statsCards.slice(0, 2)
-                                : []
-                              ).map((_, i) => ({
+                            ? isManager(session) && userLayout.length < 4
+                              ? [
+                                  ...userLayout,
+                                  ...Array(4 - userLayout.length)
+                                    .fill(null)
+                                    .map((_, i) => ({
+                                      i: (userLayout.length + i).toString(),
+                                      x: userLayout.length + i,
+                                      y: 0,
+                                      w: 1,
+                                      h: 1,
+                                    })),
+                                ]
+                              : userLayout
+                            : isAdmin(session)
+                            ? statsCards
+                            : isManager(session)
+                            ? [0, 1, 2, 3].map((_, i) => ({
                                 i: i.toString(),
                                 x: i,
                                 y: 0,
                                 w: 1,
                                 h: 1,
-                              })),
+                              }))
+                            : [],
                       }}
                       cols={{ lg: 4, md: 2, sm: 1, xs: 1 }}
                       rowHeight={60}
@@ -296,31 +308,47 @@ export default function DashboardPage() {
                       {(isAdmin(session)
                         ? statsCards
                         : isManager(session)
-                        ? statsCards.slice(0, 2)
+                        ? [...statsCards.slice(0, 2), ...Array(2).fill(null)]
                         : []
-                      ).map((card, i) => (
-                        <div
-                          key={i.toString()}
-                          data-grid={
-                            userLayout.find((l) => l.i === i.toString()) || {
+                      ).map((card, i) =>
+                        card ? (
+                          <div
+                            key={i.toString()}
+                            data-grid={
+                              userLayout.find((l) => l.i === i.toString()) || {
+                                w: 1,
+                                h: 1,
+                                x: i,
+                                y: 0,
+                                minW: 1,
+                                minH: 1,
+                              }
+                            }
+                          >
+                            <Card
+                              title={card.title}
+                              value={card.value}
+                              change={card.change}
+                              trend={card.trend as "up" | "down"}
+                              icon={card.icon}
+                            />
+                          </div>
+                        ) : (
+                          <div
+                            key={i.toString()}
+                            data-grid={{
                               w: 1,
                               h: 1,
                               x: i,
                               y: 0,
                               minW: 1,
                               minH: 1,
-                            }
-                          }
-                        >
-                          <Card
-                            title={card.title}
-                            value={card.value}
-                            change={card.change}
-                            trend={card.trend as "up" | "down"}
-                            icon={card.icon}
+                              i: i.toString(),
+                            }}
+                            style={{ visibility: "hidden" }}
                           />
-                        </div>
-                      ))}
+                        )
+                      )}
                     </ResponsiveGridLayout>
                   )}
                 </div>
