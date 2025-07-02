@@ -47,7 +47,7 @@ export default function Home() {
         <div className="flex flex-col items-center p-10 sm:p-14 md:p-16 bg-white rounded-2xl shadow-lg border-2 border-gray-300 min-w-[340px]">
           <ChartBarIcon className="w-20 h-20 mb-7 text-gray-400" />
           <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 text-gray-800">
-            Real-time Analytics
+            Dynamic Analytics
           </h3>
           <p className="text-xl sm:text-2xl text-gray-500">
             Monitor your business metrics as they happen.
