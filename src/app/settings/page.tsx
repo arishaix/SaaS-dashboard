@@ -5,6 +5,7 @@ import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Loader from "@/components/Loader";
 import { XMarkIcon, Bars3Icon } from "@heroicons/react/24/outline";
+import ChangePasswordForm from "./ChangePasswordForm";
 
 export default function SettingsPage() {
   const [notifications, setNotifications] = useState(true);
@@ -13,6 +14,9 @@ export default function SettingsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -91,48 +95,17 @@ export default function SettingsPage() {
               <h3 className="text-lg font-semibold text-gray-800 mb-4">
                 Account Settings
               </h3>
-              <form className="grid gap-4 md:grid-cols-2">
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    New Password
-                  </label>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
-                    placeholder="Enter new password"
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Confirm Password
-                  </label>
-                  <input
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
-                    placeholder="Confirm new password"
-                  />
-                </div>
-                <div className="md:col-span-2 flex justify-end gap-4 items-center">
-                  <button
-                    type="submit"
-                    className="px-6 py-2 bg-[#16113a] text-white rounded-lg shadow hover:bg-[#23205a] transition"
-                  >
-                    Change Password
-                  </button>
-                  <span className="mx-2 text-gray-300">|</span>
-                  <button
-                    type="button"
-                    className="px-6 py-2 bg-[#16113a] text-white rounded-lg shadow hover:bg-[#23205a] transition"
-                    onClick={() => signOut({ callbackUrl: "/login" })}
-                  >
-                    Logout
-                  </button>
-                </div>
-              </form>
+              <ChangePasswordForm />
+              <div className="md:col-span-2 flex justify-end gap-4 items-center mt-4">
+                <span className="mx-2 text-gray-300">|</span>
+                <button
+                  type="button"
+                  className="px-6 py-2 bg-[#16113a] text-white rounded-lg shadow hover:bg-[#23205a] transition"
+                  onClick={() => signOut({ callbackUrl: "/login" })}
+                >
+                  Logout
+                </button>
+              </div>
             </section>
 
             {/* Preferences */}
