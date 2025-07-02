@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   ChartBarIcon,
   XMarkIcon,
@@ -20,6 +20,9 @@ import UserDistributionPieChart from "@/components/charts/UserDistributionPieCha
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Loader from "@/components/Loader";
+import { Responsive, WidthProvider } from "react-grid-layout";
+import "react-grid-layout/css/styles.css";
+import "react-resizable/css/styles.css";
 
 type DashboardStats = {
   sales: any[];
@@ -39,6 +42,8 @@ function isStaff(session: any) {
   return session?.user?.role === "staff";
 }
 
+const ResponsiveGridLayout = WidthProvider(Responsive);
+
 export default function DashboardPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -53,6 +58,9 @@ export default function DashboardPage() {
     revenue: [],
     userDistribution: [],
   });
+  const [userLayout, setUserLayout] = useState<any[]>([]);
+  const [chartsLayout, setChartsLayout] = useState<any[]>([]);
+  const [layoutLoaded, setLayoutLoaded] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -103,6 +111,55 @@ export default function DashboardPage() {
     }
     fetchChartStats();
   }, []);
+
+  useEffect(() => {
+    async function fetchUserLayout() {
+      try {
+        const res = await fetch("/api/user-dashboard-layout");
+        const data = await res.json();
+        if (data.dashboardLayout && data.dashboardLayout.statCards) {
+          setUserLayout(data.dashboardLayout.statCards);
+        }
+        if (data.dashboardLayout && data.dashboardLayout.charts) {
+          setChartsLayout(data.dashboardLayout.charts);
+        }
+      } catch (e) {}
+      setLayoutLoaded(true);
+    }
+    fetchUserLayout();
+  }, []);
+
+  const handleLayoutChange = useCallback(
+    async (layout: any[]) => {
+      setUserLayout(layout);
+      try {
+        await fetch("/api/user-dashboard-layout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            dashboardLayout: { statCards: layout, charts: chartsLayout },
+          }),
+        });
+      } catch (e) {}
+    },
+    [chartsLayout]
+  );
+
+  const handleChartsLayoutChange = useCallback(
+    async (layout: any[]) => {
+      setChartsLayout(layout);
+      try {
+        await fetch("/api/user-dashboard-layout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            dashboardLayout: { statCards: userLayout, charts: layout },
+          }),
+        });
+      } catch (e) {}
+    },
+    [userLayout]
+  );
 
   if (status === "loading" || status === "unauthenticated") {
     return <Loader />;
@@ -205,93 +262,192 @@ export default function DashboardPage() {
             </div>
           ) : (
             <>
-              {/* Admin: Show all widgets/cards */}
-              {isAdmin(session) && (
-                <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 w-full">
-                    {statsCards.map((card, index) => (
-                      <Card
-                        key={index}
-                        title={card.title}
-                        value={card.value}
-                        change={card.change}
-                        trend={card.trend as "up" | "down"}
-                        icon={card.icon}
-                      />
-                    ))}
-                  </div>
-                </>
+              {/* Draggable Stat Cards for all roles, filtered by role */}
+              {!isStaff(session) && (
+                <div className="p-4 mb-8">
+                  {layoutLoaded && (
+                    <ResponsiveGridLayout
+                      className="layout"
+                      style={{ gap: 24 }}
+                      margin={[24, 24]}
+                      layouts={{
+                        lg:
+                          userLayout.length > 0
+                            ? userLayout
+                            : (isAdmin(session)
+                                ? statsCards
+                                : isManager(session)
+                                ? statsCards.slice(0, 2)
+                                : []
+                              ).map((_, i) => ({
+                                i: i.toString(),
+                                x: i,
+                                y: 0,
+                                w: 1,
+                                h: 1,
+                              })),
+                      }}
+                      cols={{ lg: 4, md: 2, sm: 1, xs: 1 }}
+                      rowHeight={120}
+                      isResizable={true}
+                      isDraggable={true}
+                      onLayoutChange={handleLayoutChange}
+                    >
+                      {(isAdmin(session)
+                        ? statsCards
+                        : isManager(session)
+                        ? statsCards.slice(0, 2)
+                        : []
+                      ).map((card, i) => (
+                        <div
+                          key={i.toString()}
+                          data-grid={
+                            userLayout.find((l) => l.i === i.toString()) || {
+                              w: 1,
+                              h: 1,
+                              x: i,
+                              y: 0,
+                              minW: 1,
+                              minH: 1,
+                            }
+                          }
+                        >
+                          <Card
+                            title={card.title}
+                            value={card.value}
+                            change={card.change}
+                            trend={card.trend as "up" | "down"}
+                            icon={card.icon}
+                          />
+                        </div>
+                      ))}
+                    </ResponsiveGridLayout>
+                  )}
+                </div>
               )}
 
-              {/* Manager: Key charts and export */}
-              {isManager(session) && (
-                <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 w-full">
-                    {/* Only show key cards for manager, e.g., Revenue and Users */}
-                    {statsCards.slice(0, 2).map((card, index) => (
-                      <Card
-                        key={index}
-                        title={card.title}
-                        value={card.value}
-                        change={card.change}
-                        trend={card.trend as "up" | "down"}
-                        icon={card.icon}
-                      />
-                    ))}
-                  </div>
-                  <div className="mb-8 flex gap-4">
-                    <button className="px-4 py-2 bg-[#16113a] text-white rounded-lg font-medium">
-                      Export Data
-                    </button>
-                  </div>
-                </>
-              )}
-
-              {/* Staff: Charts only, no actions/buttons */}
-              {isStaff(session) && (
-                <></> /* No cards or buttons for staff, just charts below */
-              )}
-
-              {/* Charts: visible to all roles */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-10 w-full">
-                <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100 w-full">
-                  <h2
-                    className="text-lg font-semibold mb-4"
-                    style={{ color: "#16113a" }}
+              {/* Draggable Charts Section */}
+              <div className="p-4">
+                {layoutLoaded && (
+                  <ResponsiveGridLayout
+                    className="layout"
+                    style={{ gap: 24 }}
+                    margin={[24, 24]}
+                    layouts={{
+                      lg:
+                        chartsLayout.length > 0
+                          ? chartsLayout
+                          : [0, 1, 2, 3].map((i) => ({
+                              i: i.toString(),
+                              x: i % 2,
+                              y: Math.floor(i / 2),
+                              w: 1,
+                              h: 2,
+                            })),
+                    }}
+                    breakpoints={{ lg: 1024, md: 768, sm: 480, xs: 0 }}
+                    cols={{ lg: 2, md: 2, sm: 1, xs: 1 }}
+                    rowHeight={180}
+                    isResizable={true}
+                    isDraggable={true}
+                    onLayoutChange={handleChartsLayoutChange}
                   >
-                    Sales Trend
-                  </h2>
-                  <SalesLineChart data={chartStats.sales} />
-                </div>
-                <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100 w-full">
-                  <h2
-                    className="text-lg font-semibold mb-4"
-                    style={{ color: "#16113a" }}
-                  >
-                    User Growth
-                  </h2>
-                  <UserGrowthBarChart data={chartStats.userGrowth} />
-                </div>
-                <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100 w-full">
-                  <h2
-                    className="text-lg font-semibold mb-4"
-                    style={{ color: "#16113a" }}
-                  >
-                    Revenue Trend
-                  </h2>
-                  <RevenueAreaChart data={chartStats.revenue} />
-                </div>
-                <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100 w-full">
-                  <h2
-                    className="text-lg font-semibold mb-4"
-                    style={{ color: "#16113a" }}
-                  >
-                    User Distribution
-                  </h2>
-                  <UserDistributionPieChart
-                    data={chartStats.userDistribution}
-                  />
-                </div>
+                    <div
+                      key="0"
+                      data-grid={
+                        chartsLayout.find((l) => l.i === "0") || {
+                          w: 1,
+                          h: 2,
+                          x: 0,
+                          y: 0,
+                          minW: 1,
+                          minH: 2,
+                        }
+                      }
+                    >
+                      <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100 w-full">
+                        <h2
+                          className="text-lg font-semibold mb-4"
+                          style={{ color: "#16113a" }}
+                        >
+                          Sales Trend
+                        </h2>
+                        <SalesLineChart data={chartStats.sales} />
+                      </div>
+                    </div>
+                    <div
+                      key="1"
+                      data-grid={
+                        chartsLayout.find((l) => l.i === "1") || {
+                          w: 1,
+                          h: 2,
+                          x: 1,
+                          y: 0,
+                          minW: 1,
+                          minH: 2,
+                        }
+                      }
+                    >
+                      <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100 w-full">
+                        <h2
+                          className="text-lg font-semibold mb-4"
+                          style={{ color: "#16113a" }}
+                        >
+                          User Growth
+                        </h2>
+                        <UserGrowthBarChart data={chartStats.userGrowth} />
+                      </div>
+                    </div>
+                    <div
+                      key="2"
+                      data-grid={
+                        chartsLayout.find((l) => l.i === "2") || {
+                          w: 1,
+                          h: 2,
+                          x: 0,
+                          y: 1,
+                          minW: 1,
+                          minH: 2,
+                        }
+                      }
+                    >
+                      <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100 w-full">
+                        <h2
+                          className="text-lg font-semibold mb-4"
+                          style={{ color: "#16113a" }}
+                        >
+                          Revenue Trend
+                        </h2>
+                        <RevenueAreaChart data={chartStats.revenue} />
+                      </div>
+                    </div>
+                    <div
+                      key="3"
+                      data-grid={
+                        chartsLayout.find((l) => l.i === "3") || {
+                          w: 1,
+                          h: 2,
+                          x: 1,
+                          y: 1,
+                          minW: 1,
+                          minH: 2,
+                        }
+                      }
+                    >
+                      <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100 w-full">
+                        <h2
+                          className="text-lg font-semibold mb-4"
+                          style={{ color: "#16113a" }}
+                        >
+                          User Distribution
+                        </h2>
+                        <UserDistributionPieChart
+                          data={chartStats.userDistribution}
+                        />
+                      </div>
+                    </div>
+                  </ResponsiveGridLayout>
+                )}
               </div>
             </>
           )}

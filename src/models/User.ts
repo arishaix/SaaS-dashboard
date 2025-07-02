@@ -10,6 +10,10 @@ const UserSchema = new Schema(
       enum: ["admin", "manager", "staff"],
       default: "staff",
     },
+    dashboardLayout: {
+      type: Schema.Types.Mixed, // Flexible for storing layout object/array
+      default: {},
+    },
   },
   { timestamps: true }
 );
