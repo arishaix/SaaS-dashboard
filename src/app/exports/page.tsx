@@ -31,6 +31,17 @@ const columnsMap = {
   ],
 };
 
+// Utility function for role checks
+function isAdmin(session: any) {
+  return session?.user?.role?.trim() === "admin";
+}
+function isManager(session: any) {
+  return session?.user?.role?.trim() === "manager";
+}
+function isStaff(session: any) {
+  return session?.user?.role?.trim() === "staff";
+}
+
 export default function ExportPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -156,24 +167,26 @@ export default function ExportPage() {
             selectedDataset={selectedDataset}
             setSelectedDataset={(ds) => setSelectedDataset(ds as any)}
           >
-            <div>
-              <ExportButtons
-                data={previewData}
-                columns={columns}
-                datasetType={
-                  selectedDataset === "users"
-                    ? "Users"
-                    : selectedDataset === "sales"
-                    ? "Sales"
-                    : selectedDataset === "reports"
-                    ? "Reports"
-                    : selectedDataset === "signups"
-                    ? "New Signups"
-                    : "Export"
-                }
-                onExport={fetchExportHistory}
-              />
-            </div>
+            {(isAdmin(session) || isManager(session)) && (
+              <div>
+                <ExportButtons
+                  data={previewData}
+                  columns={columns}
+                  datasetType={
+                    selectedDataset === "users"
+                      ? "Users"
+                      : selectedDataset === "sales"
+                      ? "Sales"
+                      : selectedDataset === "reports"
+                      ? "Reports"
+                      : selectedDataset === "signups"
+                      ? "New Signups"
+                      : "Export"
+                  }
+                  onExport={fetchExportHistory}
+                />
+              </div>
+            )}
           </DatasetSelector>
 
           <div className="relative">
@@ -192,21 +205,23 @@ export default function ExportPage() {
             )}
           </div>
 
-          <div className="relative">
-            <ExportHistoryTable exportHistory={exportHistory} />
-            {historyLoading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-white/70 z-10">
-                <Loader small />
-              </div>
-            )}
-            {historyError && !historyLoading && (
-              <div className="absolute inset-0 flex items-center justify-center z-10">
-                <span className="text-red-500 bg-white p-4 rounded shadow">
-                  {historyError}
-                </span>
-              </div>
-            )}
-          </div>
+          {(isAdmin(session) || isManager(session)) && (
+            <div className="relative">
+              <ExportHistoryTable exportHistory={exportHistory} />
+              {historyLoading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-white/70 z-10">
+                  <Loader small />
+                </div>
+              )}
+              {historyError && !historyLoading && (
+                <div className="absolute inset-0 flex items-center justify-center z-10">
+                  <span className="text-red-500 bg-white p-4 rounded shadow">
+                    {historyError}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </main>
     </div>

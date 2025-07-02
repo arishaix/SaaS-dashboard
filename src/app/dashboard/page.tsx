@@ -28,6 +28,17 @@ type DashboardStats = {
   userDistribution: any[];
 };
 
+// Utility function for role checks
+function isAdmin(session: any) {
+  return session?.user?.role === "admin";
+}
+function isManager(session: any) {
+  return session?.user?.role === "manager";
+}
+function isStaff(session: any) {
+  return session?.user?.role === "staff";
+}
+
 export default function DashboardPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -194,42 +205,89 @@ export default function DashboardPage() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 w-full">
-                {statsCards.map((card, index) => (
-                  <Card
-                    key={index}
-                    title={card.title}
-                    value={card.value}
-                    change={card.change}
-                    trend={card.trend as "up" | "down"}
-                    icon={card.icon}
-                  />
-                ))}
-              </div>
+              {/* Admin: Show all widgets/cards */}
+              {isAdmin(session) && (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 w-full">
+                    {statsCards.map((card, index) => (
+                      <Card
+                        key={index}
+                        title={card.title}
+                        value={card.value}
+                        change={card.change}
+                        trend={card.trend as "up" | "down"}
+                        icon={card.icon}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
 
+              {/* Manager: Key charts and export */}
+              {isManager(session) && (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 w-full">
+                    {/* Only show key cards for manager, e.g., Revenue and Users */}
+                    {statsCards.slice(0, 2).map((card, index) => (
+                      <Card
+                        key={index}
+                        title={card.title}
+                        value={card.value}
+                        change={card.change}
+                        trend={card.trend as "up" | "down"}
+                        icon={card.icon}
+                      />
+                    ))}
+                  </div>
+                  <div className="mb-8 flex gap-4">
+                    <button className="px-4 py-2 bg-[#16113a] text-white rounded-lg font-medium">
+                      Export Data
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {/* Staff: Charts only, no actions/buttons */}
+              {isStaff(session) && (
+                <></> /* No cards or buttons for staff, just charts below */
+              )}
+
+              {/* Charts: visible to all roles */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-10 w-full">
                 <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100 w-full">
-                  <h3 className="text-xl font-bold text-gray-800 mb-4">
-                    Sales Over Time
-                  </h3>
+                  <h2
+                    className="text-lg font-semibold mb-4"
+                    style={{ color: "#16113a" }}
+                  >
+                    Sales Trend
+                  </h2>
                   <SalesLineChart data={chartStats.sales} />
                 </div>
                 <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100 w-full">
-                  <h3 className="text-xl font-bold text-gray-800 mb-4">
+                  <h2
+                    className="text-lg font-semibold mb-4"
+                    style={{ color: "#16113a" }}
+                  >
                     User Growth
-                  </h3>
+                  </h2>
                   <UserGrowthBarChart data={chartStats.userGrowth} />
                 </div>
                 <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100 w-full">
-                  <h3 className="text-xl font-bold text-gray-800 mb-4">
+                  <h2
+                    className="text-lg font-semibold mb-4"
+                    style={{ color: "#16113a" }}
+                  >
                     Revenue Trend
-                  </h3>
+                  </h2>
                   <RevenueAreaChart data={chartStats.revenue} />
                 </div>
                 <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100 w-full">
-                  <h3 className="text-xl font-bold text-gray-800 mb-4">
+                  <h2
+                    className="text-lg font-semibold mb-4"
+                    style={{ color: "#16113a" }}
+                  >
                     User Distribution
-                  </h3>
+                  </h2>
                   <UserDistributionPieChart
                     data={chartStats.userDistribution}
                   />

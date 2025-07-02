@@ -1,7 +1,8 @@
 import React from "react";
 
 interface ExportHistoryItem {
-  id: number;
+  _id?: string;
+  id?: number;
   type: string;
   date: string;
   format: string;
@@ -38,8 +39,8 @@ const ExportHistoryTable: React.FC<ExportHistoryTableProps> = ({
           </tr>
         </thead>
         <tbody>
-          {exportHistory.map((item) => (
-            <tr key={item.id}>
+          {exportHistory.map((item, index) => (
+            <tr key={item._id || item.id || index}>
               <td
                 className="px-4 py-2 border-b"
                 style={{ color: "#23205a", borderBottom: "1px solid #e5e7eb" }}

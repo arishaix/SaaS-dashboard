@@ -52,6 +52,17 @@ const columnsMap = {
   ],
 };
 
+// Utility function for role checks
+function isAdmin(session: any) {
+  return session?.user?.role?.trim() === "admin";
+}
+function isManager(session: any) {
+  return session?.user?.role?.trim() === "manager";
+}
+function isStaff(session: any) {
+  return session?.user?.role?.trim() === "staff";
+}
+
 export default function ReportPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -208,13 +219,25 @@ export default function ReportPage() {
               </p>
             </div>
 
-            <div className="mb-6">
+            <div className="mb-6 flex flex-wrap gap-4 items-start">
               <DatasetSelector
                 selectedDataset={selectedDataset}
                 setSelectedDataset={(ds) =>
                   setSelectedDataset(ds as DatasetKey)
                 }
               />
+              {(isAdmin(session) || isManager(session)) && (
+                <div className="mt-1">
+                  <ExportButtons
+                    data={filteredAndSortedData}
+                    columns={columns}
+                    datasetType={
+                      selectedDataset.charAt(0).toUpperCase() +
+                      selectedDataset.slice(1)
+                    }
+                  />
+                </div>
+              )}
             </div>
 
             <div className="mb-6 space-y-4 md:space-y-0 md:flex md:items-center md:justify-between">
@@ -254,8 +277,6 @@ export default function ReportPage() {
                     ]}
                   />
                 </div>
-
-                <ExportButtons data={filteredAndSortedData} columns={columns} />
               </div>
             </div>
 
