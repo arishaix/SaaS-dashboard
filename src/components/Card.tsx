@@ -16,7 +16,7 @@ export default function Card({
   icon: Icon,
 }: CardProps) {
   return (
-    <div className="bg-white rounded-2xl shadow-md p-8 border border-gray-100">
+    <div className="bg-white rounded-2xl shadow-md p-4 sm:p-6 md:p-8 border border-gray-100">
       <div className="flex items-center justify-between mb-6">
         <div
           className={`p-4 rounded-xl ${

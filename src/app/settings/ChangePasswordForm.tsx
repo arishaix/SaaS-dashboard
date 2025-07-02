@@ -1,5 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
+import { showToast } from "@/components/ToastMessage";
+import ToastMessage from "@/components/ToastMessage";
 
 export default function ChangePasswordForm() {
   const [password, setPassword] = useState("");
@@ -25,10 +27,21 @@ export default function ChangePasswordForm() {
         setError(null);
         if (!password || password.length < 6) {
           setError("Password must be at least 6 characters.");
+          showToast(
+            <ToastMessage
+              type="error"
+              message="Password must be at least 6 characters."
+            />,
+            { toastId: "password-change" }
+          );
           return;
         }
         if (password !== confirmPassword) {
           setError("Passwords do not match.");
+          showToast(
+            <ToastMessage type="error" message="Passwords do not match." />,
+            { toastId: "password-change" }
+          );
           return;
         }
         setLoading(true);
@@ -43,11 +56,29 @@ export default function ChangePasswordForm() {
             setMessage("Password changed successfully.");
             setPassword("");
             setConfirmPassword("");
+            showToast(
+              <ToastMessage
+                type="success"
+                message="Password changed successfully."
+              />,
+              { toastId: "password-change" }
+            );
           } else {
             setError(data.error || "Failed to change password.");
+            showToast(
+              <ToastMessage
+                type="error"
+                message={data.error || "Failed to change password."}
+              />,
+              { toastId: "password-change" }
+            );
           }
         } catch {
           setError("Failed to change password.");
+          showToast(
+            <ToastMessage type="error" message="Failed to change password." />,
+            { toastId: "password-change" }
+          );
         } finally {
           setLoading(false);
         }

@@ -11,8 +11,12 @@ const UserSchema = new Schema(
       default: "staff",
     },
     dashboardLayout: {
-      type: Schema.Types.Mixed, // Flexible for storing layout object/array
+      type: Schema.Types.Mixed,
       default: {},
+    },
+    notificationsEnabled: {
+      type: Boolean,
+      default: true,
     },
   },
   { timestamps: true }

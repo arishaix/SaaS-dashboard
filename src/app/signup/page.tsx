@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
+import { showToast } from "@/components/ToastMessage";
+import ToastMessage from "@/components/ToastMessage";
 
 export default function SignupPage() {
   const [name, setName] = useState("");
@@ -45,6 +47,9 @@ export default function SignupPage() {
     });
     setLoading(false);
     if (res.ok) {
+      showToast(<ToastMessage type="success" message="Signup successful!" />, {
+        toastId: "signup",
+      });
       await signIn("credentials", {
         redirect: false,
         email,
@@ -53,6 +58,7 @@ export default function SignupPage() {
       router.push("/dashboard");
     } else {
       const data = await res.json();
+      let errorMsg = data.error || "Signup failed. Please try again.";
       if (data.error?.toLowerCase().includes("user already exists"))
         setEmailError("User already exists");
       if (data.error?.toLowerCase().includes("missing")) {
@@ -60,6 +66,9 @@ export default function SignupPage() {
         if (!email) setEmailError("Email is required");
         if (!password) setPasswordError("Password is required");
       }
+      showToast(<ToastMessage type="error" message={errorMsg} />, {
+        toastId: "signup",
+      });
     }
   }
 

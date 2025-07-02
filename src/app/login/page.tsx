@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
+import { showToast } from "@/components/ToastMessage";
+import ToastMessage from "@/components/ToastMessage";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -38,6 +40,9 @@ export default function LoginPage() {
     });
     setLoading(false);
     if (res?.ok) {
+      showToast(<ToastMessage type="success" message="Login successful!" />, {
+        toastId: "login",
+      });
       router.push("/dashboard");
     } else {
       let errMsg = res?.error || "Invalid email or password";
@@ -45,6 +50,9 @@ export default function LoginPage() {
       setError(errMsg);
       setEmailError("Invalid email or password");
       setPasswordError("Invalid email or password");
+      showToast(<ToastMessage type="error" message={errMsg} />, {
+        toastId: "login",
+      });
     }
   }
 

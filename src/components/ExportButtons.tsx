@@ -1,5 +1,7 @@
 import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
 import * as XLSX from "xlsx";
+import { showToast } from "@/components/ToastMessage";
+import ToastMessage from "@/components/ToastMessage";
 
 interface ExportButtonsProps {
   data: any[];
@@ -33,22 +35,34 @@ async function exportToCSV(
   type = "Export",
   onExport?: () => void
 ) {
-  const header = columns.map((col) => col.label).join(",");
-  const rows = data.map((row) =>
-    columns
-      .map((col) => `"${(row[col.key] ?? "").toString().replace(/"/g, '""')}"`)
-      .join(",")
-  );
-  const csvContent = [header, ...rows].join("\r\n");
-  const blob = new Blob([csvContent], { type: "text/csv" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
-  await saveExportEvent({ type, format: "CSV", link: url });
-  if (onExport) onExport();
+  try {
+    const header = columns.map((col) => col.label).join(",");
+    const rows = data.map((row) =>
+      columns
+        .map(
+          (col) => `"${(row[col.key] ?? "").toString().replace(/"/g, '""')}"`
+        )
+        .join(",")
+    );
+    const csvContent = [header, ...rows].join("\r\n");
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+    await saveExportEvent({ type, format: "CSV", link: url });
+    if (onExport) onExport();
+    showToast(
+      <ToastMessage type="success" message="Exported CSV successfully!" />,
+      { toastId: "export-csv" }
+    );
+  } catch (e) {
+    showToast(<ToastMessage type="error" message="Failed to export CSV." />, {
+      toastId: "export-csv",
+    });
+  }
 }
 
 async function exportToExcel(
@@ -58,16 +72,26 @@ async function exportToExcel(
   type = "Export",
   onExport?: () => void
 ) {
-  const worksheetData = [
-    columns.map((col) => col.label),
-    ...data.map((row) => columns.map((col) => row[col.key])),
-  ];
-  const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
-  XLSX.writeFile(workbook, filename);
-  await saveExportEvent({ type, format: "Excel", link: filename });
-  if (onExport) onExport();
+  try {
+    const worksheetData = [
+      columns.map((col) => col.label),
+      ...data.map((row) => columns.map((col) => row[col.key])),
+    ];
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
+    XLSX.writeFile(workbook, filename);
+    await saveExportEvent({ type, format: "Excel", link: filename });
+    if (onExport) onExport();
+    showToast(
+      <ToastMessage type="success" message="Exported Excel successfully!" />,
+      { toastId: "export-excel" }
+    );
+  } catch (e) {
+    showToast(<ToastMessage type="error" message="Failed to export Excel." />, {
+      toastId: "export-excel",
+    });
+  }
 }
 
 export default function ExportButtons({

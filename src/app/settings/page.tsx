@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Loader from "@/components/Loader";
 import { XMarkIcon, Bars3Icon } from "@heroicons/react/24/outline";
 import ChangePasswordForm from "./ChangePasswordForm";
+import ToastMessage, { showToast } from "@/components/ToastMessage";
 
 export default function SettingsPage() {
   const [notifications, setNotifications] = useState(true);
@@ -23,6 +24,22 @@ export default function SettingsPage() {
       router.replace("/login");
     }
   }, [status, router]);
+
+  // Fetch notificationsEnabled from API on mount
+  useEffect(() => {
+    async function fetchNotifications() {
+      try {
+        const res = await fetch("/api/users/notifications");
+        if (res.ok) {
+          const data = await res.json();
+          setNotifications(data.notificationsEnabled);
+        }
+      } catch {}
+    }
+    if (status === "authenticated") {
+      fetchNotifications();
+    }
+  }, [status]);
 
   if (status === "loading" || status === "unauthenticated") {
     return <Loader />;
@@ -75,13 +92,6 @@ export default function SettingsPage() {
           <div className="w-full max-w-3xl bg-white rounded-xl shadow-lg p-8 grid gap-8">
             {/* Profile Info */}
             <section className="flex items-center gap-6 border-b pb-6">
-              <img
-                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
-                  session?.user?.name || "User"
-                )}&background=0D8ABC&color=fff`}
-                alt="Avatar"
-                className="w-20 h-20 rounded-full border-4 border-gray-200 shadow"
-              />
               <div>
                 <h2 className="text-xl font-bold text-gray-900">
                   {session?.user?.name || "-"}
@@ -101,7 +111,26 @@ export default function SettingsPage() {
                 <button
                   type="button"
                   className="px-6 py-2 bg-[#16113a] text-white rounded-lg shadow hover:bg-[#23205a] transition"
-                  onClick={() => signOut({ callbackUrl: "/login" })}
+                  onClick={async () => {
+                    try {
+                      await signOut({ callbackUrl: "/login" });
+                      showToast(
+                        <ToastMessage
+                          type="success"
+                          message="Logged out successfully."
+                        />,
+                        { toastId: "logout" }
+                      );
+                    } catch {
+                      showToast(
+                        <ToastMessage
+                          type="error"
+                          message="Logout failed. Please try again."
+                        />,
+                        { toastId: "logout" }
+                      );
+                    }
+                  }}
                 >
                   Logout
                 </button>
@@ -122,7 +151,19 @@ export default function SettingsPage() {
                   <button
                     type="button"
                     aria-pressed={notifications}
-                    onClick={() => setNotifications((v) => !v)}
+                    onClick={async () => {
+                      const newValue = !notifications;
+                      setNotifications(newValue);
+                      try {
+                        await fetch("/api/users/notifications", {
+                          method: "PATCH",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            notificationsEnabled: newValue,
+                          }),
+                        });
+                      } catch {}
+                    }}
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#16113a] ${
                       notifications ? "bg-[#16113a]" : "bg-gray-300"
                     }`}

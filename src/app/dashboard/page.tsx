@@ -264,12 +264,12 @@ export default function DashboardPage() {
             <>
               {/* Draggable Stat Cards for all roles, filtered by role */}
               {!isStaff(session) && (
-                <div className="p-4 mb-8">
+                <div className="mb-4">
                   {layoutLoaded && (
                     <ResponsiveGridLayout
                       className="layout"
-                      style={{ gap: 24 }}
-                      margin={[24, 24]}
+                      style={{ gap: 8 }}
+                      margin={[8, 4]}
                       layouts={{
                         lg:
                           userLayout.length > 0
@@ -288,7 +288,7 @@ export default function DashboardPage() {
                               })),
                       }}
                       cols={{ lg: 4, md: 2, sm: 1, xs: 1 }}
-                      rowHeight={120}
+                      rowHeight={60}
                       isResizable={true}
                       isDraggable={true}
                       onLayoutChange={handleLayoutChange}
@@ -327,7 +327,7 @@ export default function DashboardPage() {
               )}
 
               {/* Draggable Charts Section */}
-              <div className="p-4">
+              <div className="mt-6">
                 {layoutLoaded && (
                   <ResponsiveGridLayout
                     className="layout"
@@ -336,17 +336,17 @@ export default function DashboardPage() {
                     layouts={{
                       lg:
                         chartsLayout.length > 0
-                          ? chartsLayout
+                          ? chartsLayout.map((item: any) => ({ ...item, w: 2 }))
                           : [0, 1, 2, 3].map((i) => ({
                               i: i.toString(),
-                              x: i % 2,
+                              x: (i % 2) * 2,
                               y: Math.floor(i / 2),
-                              w: 1,
+                              w: 2,
                               h: 2,
                             })),
                     }}
                     breakpoints={{ lg: 1024, md: 768, sm: 480, xs: 0 }}
-                    cols={{ lg: 2, md: 2, sm: 1, xs: 1 }}
+                    cols={{ lg: 4, md: 2, sm: 1, xs: 1 }}
                     rowHeight={180}
                     isResizable={true}
                     isDraggable={true}
@@ -355,14 +355,16 @@ export default function DashboardPage() {
                     <div
                       key="0"
                       data-grid={
-                        chartsLayout.find((l) => l.i === "0") || {
-                          w: 1,
-                          h: 2,
-                          x: 0,
-                          y: 0,
-                          minW: 1,
-                          minH: 2,
-                        }
+                        chartsLayout.find((l) => l.i === "0")
+                          ? { ...chartsLayout.find((l) => l.i === "0"), w: 2 }
+                          : {
+                              w: 2,
+                              h: 2,
+                              x: 0,
+                              y: 0,
+                              minW: 2,
+                              minH: 2,
+                            }
                       }
                     >
                       <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100 w-full">
@@ -378,14 +380,16 @@ export default function DashboardPage() {
                     <div
                       key="1"
                       data-grid={
-                        chartsLayout.find((l) => l.i === "1") || {
-                          w: 1,
-                          h: 2,
-                          x: 1,
-                          y: 0,
-                          minW: 1,
-                          minH: 2,
-                        }
+                        chartsLayout.find((l) => l.i === "1")
+                          ? { ...chartsLayout.find((l) => l.i === "1"), w: 2 }
+                          : {
+                              w: 2,
+                              h: 2,
+                              x: 2,
+                              y: 0,
+                              minW: 2,
+                              minH: 2,
+                            }
                       }
                     >
                       <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100 w-full">
@@ -401,14 +405,16 @@ export default function DashboardPage() {
                     <div
                       key="2"
                       data-grid={
-                        chartsLayout.find((l) => l.i === "2") || {
-                          w: 1,
-                          h: 2,
-                          x: 0,
-                          y: 1,
-                          minW: 1,
-                          minH: 2,
-                        }
+                        chartsLayout.find((l) => l.i === "2")
+                          ? { ...chartsLayout.find((l) => l.i === "2"), w: 2 }
+                          : {
+                              w: 2,
+                              h: 2,
+                              x: 0,
+                              y: 1,
+                              minW: 2,
+                              minH: 2,
+                            }
                       }
                     >
                       <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100 w-full">
@@ -424,14 +430,16 @@ export default function DashboardPage() {
                     <div
                       key="3"
                       data-grid={
-                        chartsLayout.find((l) => l.i === "3") || {
-                          w: 1,
-                          h: 2,
-                          x: 1,
-                          y: 1,
-                          minW: 1,
-                          minH: 2,
-                        }
+                        chartsLayout.find((l) => l.i === "3")
+                          ? { ...chartsLayout.find((l) => l.i === "3"), w: 2 }
+                          : {
+                              w: 2,
+                              h: 2,
+                              x: 2,
+                              y: 1,
+                              minW: 2,
+                              minH: 2,
+                            }
                       }
                     >
                       <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100 w-full">
