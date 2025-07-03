@@ -260,7 +260,15 @@ export default function DashboardPage() {
             <>
               {/* Draggable Stat Cards for all roles, filtered by role */}
               {!isStaff(session) && (
-                <div className={`${isManager(session) ? "mb-39" : "mb-4"}`}>
+                <div
+                  className={`${
+                    isAdmin(session)
+                      ? "mb-39"
+                      : isManager(session)
+                      ? "mb-39"
+                      : "mb-4"
+                  }`}
+                >
                   {layoutLoaded && (
                     <ResponsiveGridLayout
                       className="layout"
