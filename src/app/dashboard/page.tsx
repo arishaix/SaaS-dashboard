@@ -7,11 +7,7 @@ import {
   UserPlusIcon,
 } from "@heroicons/react/24/outline";
 import Sidebar from "@/components/Sidebar";
-import {
-  CurrencyDollarIcon,
-  UserGroupIcon,
-  UserIcon,
-} from "@heroicons/react/24/outline";
+import { CurrencyDollarIcon, UserGroupIcon } from "@heroicons/react/24/outline";
 import Card from "@/components/Card";
 import SalesLineChart from "@/components/charts/SalesLineChart";
 import UserGrowthBarChart from "@/components/charts/UserGrowthBarChart";

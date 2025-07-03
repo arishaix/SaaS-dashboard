@@ -1,9 +1,4 @@
-import NextAuth, {
-  Session,
-  User as NextAuthUser,
-  Account,
-  Profile,
-} from "next-auth";
+import NextAuth, { Session, User as NextAuthUser } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import User from "@/models/User";
 import { dbConnect } from "@/lib/mongoose";

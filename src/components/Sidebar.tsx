@@ -5,10 +5,6 @@ import {
   ChartBarIcon,
   CogIcon,
   HomeIcon,
-  ArrowLeftOnRectangleIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  UserCircleIcon,
   ArrowDownTrayIcon,
 } from "@heroicons/react/24/outline";
 

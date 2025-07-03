@@ -5,7 +5,6 @@ import {
   ChartBarIcon,
   UsersIcon,
   PuzzlePieceIcon,
-  MoonIcon,
 } from "@heroicons/react/24/solid";
 
 export default function Home() {
