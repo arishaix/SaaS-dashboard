@@ -18,6 +18,14 @@ export default function ChangePasswordForm() {
     }
   }, [error]);
 
+  // Auto-dismiss success message after 5 seconds
+  useEffect(() => {
+    if (message) {
+      const timer = setTimeout(() => setMessage(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
+
   return (
     <form
       className="grid gap-4 md:grid-cols-2"
