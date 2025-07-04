@@ -40,6 +40,11 @@ const columnsMap = {
     { key: "amount", label: "Amount" },
     { key: "date", label: "Date" },
   ],
+  revenue: [
+    { key: "amount", label: "Amount" },
+    { key: "source", label: "Source" },
+    { key: "date", label: "Date" },
+  ],
   reports: [
     { key: "name", label: "Name" },
     { key: "date", label: "Date" },
@@ -81,7 +86,7 @@ export default function ReportPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [reportData, setReportData] = useState<any[]>([]);
   const [loadingReports, setLoadingReports] = useState(true);
-  type DatasetKey = "users" | "sales" | "reports" | "signups";
+  type DatasetKey = "users" | "sales" | "revenue" | "reports" | "signups";
   const [selectedDataset, setSelectedDataset] = useState<DatasetKey>("reports");
 
   useEffect(() => {
@@ -95,6 +100,7 @@ export default function ReportPage() {
     let endpoint = "";
     if (selectedDataset === "users") endpoint = "/api/users";
     else if (selectedDataset === "sales") endpoint = "/api/sales";
+    else if (selectedDataset === "revenue") endpoint = "/api/revenue";
     else if (selectedDataset === "reports") endpoint = "/api/reports";
     else if (selectedDataset === "signups") endpoint = "/api/signups";
     fetch(endpoint)
@@ -102,6 +108,8 @@ export default function ReportPage() {
       .then((data) => {
         if (selectedDataset === "users") setReportData(data.users || []);
         else if (selectedDataset === "sales") setReportData(data.sales || []);
+        else if (selectedDataset === "revenue")
+          setReportData(data.revenues || []);
         else if (selectedDataset === "reports")
           setReportData(data.reports || []);
         else if (selectedDataset === "signups")

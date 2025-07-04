@@ -19,6 +19,8 @@ import Loader from "@/components/Loader";
 import { Responsive, WidthProvider } from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
+import AddSaleForm from "@/components/forms/AddSaleForm";
+import AddRevenueForm from "@/components/forms/AddRevenueForm";
 
 type DashboardStats = {
   sales: any[];
@@ -57,6 +59,9 @@ export default function DashboardPage() {
   const [userLayout, setUserLayout] = useState<any[]>([]);
   const [chartsLayout, setChartsLayout] = useState<any[]>([]);
   const [layoutLoaded, setLayoutLoaded] = useState(false);
+  const [addSaleOpen, setAddSaleOpen] = useState(false);
+  const [addRevenueOpen, setAddRevenueOpen] = useState(false);
+  const [loadingCharts, setLoadingCharts] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -64,47 +69,45 @@ export default function DashboardPage() {
     }
   }, [status, router]);
 
-  useEffect(() => {
-    async function fetchStats() {
-      setLoadingStats(true);
-      try {
-        const res = await fetch("/api/stats");
-        const data = await res.json();
-        if (data.latest) {
-          setStats(data.latest);
-        }
-        if (data.previous) {
-          setPrevStats(data.previous);
-        }
-        if (typeof data.newSignups === "number") {
-          setNewSignups(data.newSignups);
-        }
-      } catch (err) {
-        setStats(null);
-      } finally {
-        setLoadingStats(false);
-      }
+  // Refetch functions for stats and charts
+  const fetchStats = async () => {
+    setLoadingStats(true);
+    try {
+      const res = await fetch("/api/stats");
+      const data = await res.json();
+      setStats(data);
+    } catch (err) {
+      setStats(null);
+    } finally {
+      setLoadingStats(false);
     }
+  };
+
+  const fetchChartStats = async () => {
+    setLoadingCharts(true);
+    const res = await fetch("/api/dashboard-stats");
+    const data = await res.json();
+    console.log("/api/dashboard-stats response", data);
+    const statsByType: DashboardStats = {
+      sales: [],
+      userGrowth: [],
+      revenue: [],
+      userDistribution: [],
+    };
+    data.stats.forEach((stat: any) => {
+      if (stat.type && stat.type in statsByType) {
+        statsByType[stat.type as keyof DashboardStats] = stat.data;
+      }
+    });
+    setChartStats(statsByType);
+    setLoadingCharts(false);
+  };
+
+  useEffect(() => {
     fetchStats();
   }, []);
 
   useEffect(() => {
-    async function fetchChartStats() {
-      const res = await fetch("/api/dashboard-stats");
-      const data = await res.json();
-      const statsByType: DashboardStats = {
-        sales: [],
-        userGrowth: [],
-        revenue: [],
-        userDistribution: [],
-      };
-      data.stats.forEach((stat: any) => {
-        if (stat.type && stat.type in statsByType) {
-          statsByType[stat.type as keyof DashboardStats] = stat.data;
-        }
-      });
-      setChartStats(statsByType);
-    }
     fetchChartStats();
   }, []);
 
@@ -171,41 +174,29 @@ export default function DashboardPage() {
         {
           title: "Revenue",
           value: `$${stats.revenue}`,
-          change:
-            prevStats && typeof prevStats.revenue === "number"
-              ? `${getPercentChange(stats.revenue, prevStats.revenue).toFixed(
-                  1
-                )}%`
-              : "0%",
-          trend:
-            prevStats && stats.revenue >= prevStats.revenue ? "up" : "down",
+          change: undefined,
+          trend: undefined,
           icon: CurrencyDollarIcon,
         },
         {
           title: "Sales",
           value: `${stats.sales}`,
-          change:
-            prevStats && typeof prevStats.sales === "number"
-              ? `${getPercentChange(stats.sales, prevStats.sales).toFixed(1)}%`
-              : "0%",
-          trend: prevStats && stats.sales >= prevStats.sales ? "up" : "down",
+          change: undefined,
+          trend: undefined,
           icon: ChartBarIcon,
         },
         {
           title: "Users",
           value: `${stats.users}`,
-          change:
-            prevStats && typeof prevStats.users === "number"
-              ? `${getPercentChange(stats.users, prevStats.users).toFixed(1)}%`
-              : "0%",
-          trend: prevStats && stats.users >= prevStats.users ? "up" : "down",
+          change: undefined,
+          trend: undefined,
           icon: UserGroupIcon,
         },
         {
           title: "New Signups",
-          value: `${newSignups}`,
-          change: "+5%",
-          trend: "up",
+          value: `${stats.newSignups}`,
+          change: undefined,
+          trend: undefined,
           icon: UserPlusIcon,
         },
       ]
@@ -258,6 +249,24 @@ export default function DashboardPage() {
             </div>
           ) : (
             <>
+              <AddSaleForm
+                open={addSaleOpen}
+                onClose={() => setAddSaleOpen(false)}
+                onSuccess={() => {
+                  setAddSaleOpen(false);
+                  fetchStats();
+                  fetchChartStats();
+                }}
+              />
+              <AddRevenueForm
+                open={addRevenueOpen}
+                onClose={() => setAddRevenueOpen(false)}
+                onSuccess={() => {
+                  setAddRevenueOpen(false);
+                  fetchStats();
+                  fetchChartStats();
+                }}
+              />
               {/* Draggable Stat Cards for all roles, filtered by role */}
               {!isStaff(session) && (
                 <div
@@ -274,6 +283,7 @@ export default function DashboardPage() {
                       className="layout"
                       style={{ gap: 8 }}
                       margin={[8, 4]}
+                      draggableCancel=".not-draggable"
                       layouts={{
                         lg:
                           userLayout.length > 0
@@ -335,6 +345,13 @@ export default function DashboardPage() {
                               change={card.change}
                               trend={card.trend as "up" | "down"}
                               icon={card.icon}
+                              onAdd={
+                                card.title === "Revenue"
+                                  ? () => setAddRevenueOpen(true)
+                                  : card.title === "Sales"
+                                  ? () => setAddSaleOpen(true)
+                                  : undefined
+                              }
                             />
                           </div>
                         ) : (
@@ -361,132 +378,154 @@ export default function DashboardPage() {
               {/* Draggable Charts Section */}
               <div className="mt-6">
                 {layoutLoaded && (
-                  <ResponsiveGridLayout
-                    className="layout"
-                    style={{ gap: 24 }}
-                    margin={[24, 24]}
-                    layouts={{
-                      lg:
-                        chartsLayout.length > 0
-                          ? chartsLayout.map((item: any) => ({ ...item, w: 2 }))
-                          : [0, 1, 2, 3].map((i) => ({
-                              i: i.toString(),
-                              x: (i % 2) * 2,
-                              y: Math.floor(i / 2),
-                              w: 2,
-                              h: 2,
-                            })),
-                    }}
-                    breakpoints={{ lg: 1024, md: 768, sm: 480, xs: 0 }}
-                    cols={{ lg: 4, md: 2, sm: 1, xs: 1 }}
-                    rowHeight={180}
-                    isResizable={true}
-                    isDraggable={true}
-                    onLayoutChange={handleChartsLayoutChange}
-                  >
-                    <div
-                      key="0"
-                      data-grid={
-                        chartsLayout.find((l) => l.i === "0")
-                          ? { ...chartsLayout.find((l) => l.i === "0"), w: 2 }
-                          : {
-                              w: 2,
-                              h: 2,
-                              x: 0,
-                              y: 0,
-                              minW: 2,
-                              minH: 2,
-                            }
-                      }
-                    >
-                      <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100 w-full">
-                        <h2
-                          className="text-lg font-semibold mb-4"
-                          style={{ color: "#16113a" }}
-                        >
-                          Sales Trend
-                        </h2>
-                        <SalesLineChart data={chartStats.sales} />
+                  <div className="relative">
+                    {loadingCharts && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-white/70 z-10">
+                        <Loader small />
                       </div>
-                    </div>
-                    <div
-                      key="1"
-                      data-grid={
-                        chartsLayout.find((l) => l.i === "1")
-                          ? { ...chartsLayout.find((l) => l.i === "1"), w: 2 }
-                          : {
-                              w: 2,
-                              h: 2,
-                              x: 2,
-                              y: 0,
-                              minW: 2,
-                              minH: 2,
-                            }
-                      }
+                    )}
+                    <ResponsiveGridLayout
+                      className="layout"
+                      style={{ gap: 24 }}
+                      margin={[24, 24]}
+                      layouts={{
+                        lg:
+                          chartsLayout.length > 0
+                            ? chartsLayout.map((item: any) => ({
+                                ...item,
+                                w: 2,
+                              }))
+                            : [0, 1, 2, 3].map((i) => ({
+                                i: i.toString(),
+                                x: (i % 2) * 2,
+                                y: Math.floor(i / 2),
+                                w: 2,
+                                h: 2,
+                              })),
+                      }}
+                      breakpoints={{ lg: 1024, md: 768, sm: 480, xs: 0 }}
+                      cols={{ lg: 4, md: 2, sm: 1, xs: 1 }}
+                      rowHeight={180}
+                      isResizable={true}
+                      isDraggable={true}
+                      onLayoutChange={handleChartsLayoutChange}
                     >
-                      <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100 w-full">
-                        <h2
-                          className="text-lg font-semibold mb-4"
-                          style={{ color: "#16113a" }}
-                        >
-                          User Growth
-                        </h2>
-                        <UserGrowthBarChart data={chartStats.userGrowth} />
+                      <div
+                        key="0"
+                        data-grid={
+                          chartsLayout.find((l) => l.i === "0")
+                            ? {
+                                ...chartsLayout.find((l) => l.i === "0"),
+                                w: 2,
+                              }
+                            : {
+                                w: 2,
+                                h: 2,
+                                x: 0,
+                                y: 0,
+                                minW: 2,
+                                minH: 2,
+                              }
+                        }
+                      >
+                        <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100 w-full">
+                          <h2
+                            className="text-lg font-semibold mb-4"
+                            style={{ color: "#16113a" }}
+                          >
+                            Sales Trend
+                          </h2>
+                          <SalesLineChart data={chartStats.sales} />
+                        </div>
                       </div>
-                    </div>
-                    <div
-                      key="2"
-                      data-grid={
-                        chartsLayout.find((l) => l.i === "2")
-                          ? { ...chartsLayout.find((l) => l.i === "2"), w: 2 }
-                          : {
-                              w: 2,
-                              h: 2,
-                              x: 0,
-                              y: 1,
-                              minW: 2,
-                              minH: 2,
-                            }
-                      }
-                    >
-                      <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100 w-full">
-                        <h2
-                          className="text-lg font-semibold mb-4"
-                          style={{ color: "#16113a" }}
-                        >
-                          Revenue Trend
-                        </h2>
-                        <RevenueAreaChart data={chartStats.revenue} />
+                      <div
+                        key="1"
+                        data-grid={
+                          chartsLayout.find((l) => l.i === "1")
+                            ? {
+                                ...chartsLayout.find((l) => l.i === "1"),
+                                w: 2,
+                              }
+                            : {
+                                w: 2,
+                                h: 2,
+                                x: 2,
+                                y: 0,
+                                minW: 2,
+                                minH: 2,
+                              }
+                        }
+                      >
+                        <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100 w-full">
+                          <h2
+                            className="text-lg font-semibold mb-4"
+                            style={{ color: "#16113a" }}
+                          >
+                            User Growth
+                          </h2>
+                          <UserGrowthBarChart data={chartStats.userGrowth} />
+                        </div>
                       </div>
-                    </div>
-                    <div
-                      key="3"
-                      data-grid={
-                        chartsLayout.find((l) => l.i === "3")
-                          ? { ...chartsLayout.find((l) => l.i === "3"), w: 2 }
-                          : {
-                              w: 2,
-                              h: 2,
-                              x: 2,
-                              y: 1,
-                              minW: 2,
-                              minH: 2,
-                            }
-                      }
-                    >
-                      <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100 w-full">
-                        <h2
-                          className="text-lg font-semibold mb-4"
-                          style={{ color: "#16113a" }}
-                        >
-                          User Distribution
-                        </h2>
-                        <UserDistributionPieChart
-                          data={chartStats.userDistribution}
-                        />
+                      <div
+                        key="2"
+                        data-grid={
+                          chartsLayout.find((l) => l.i === "2")
+                            ? {
+                                ...chartsLayout.find((l) => l.i === "2"),
+                                w: 2,
+                              }
+                            : {
+                                w: 2,
+                                h: 2,
+                                x: 0,
+                                y: 1,
+                                minW: 2,
+                                minH: 2,
+                              }
+                        }
+                      >
+                        <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100 w-full">
+                          <h2
+                            className="text-lg font-semibold mb-4"
+                            style={{ color: "#16113a" }}
+                          >
+                            Revenue Trend
+                          </h2>
+                          <RevenueAreaChart data={chartStats.revenue} />
+                        </div>
                       </div>
-                    </div>
-                  </ResponsiveGridLayout>
+                      <div
+                        key="3"
+                        data-grid={
+                          chartsLayout.find((l) => l.i === "3")
+                            ? {
+                                ...chartsLayout.find((l) => l.i === "3"),
+                                w: 2,
+                              }
+                            : {
+                                w: 2,
+                                h: 2,
+                                x: 2,
+                                y: 1,
+                                minW: 2,
+                                minH: 2,
+                              }
+                        }
+                      >
+                        <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100 w-full">
+                          <h2
+                            className="text-lg font-semibold mb-4"
+                            style={{ color: "#16113a" }}
+                          >
+                            User Distribution
+                          </h2>
+                          <UserDistributionPieChart
+                            data={chartStats.userDistribution}
+                          />
+                        </div>
+                      </div>
+                    </ResponsiveGridLayout>
+                  </div>
                 )}
               </div>
             </>

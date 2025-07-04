@@ -29,6 +29,11 @@ const columnsMap = {
     { key: "amount", label: "Amount" },
     { key: "date", label: "Date" },
   ],
+  revenue: [
+    { key: "amount", label: "Amount" },
+    { key: "source", label: "Source" },
+    { key: "date", label: "Date" },
+  ],
 };
 
 // Utility function for role checks
@@ -47,7 +52,7 @@ export default function ExportPage() {
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedDataset, setSelectedDataset] = useState<
-    "users" | "reports" | "signups" | "sales"
+    "users" | "reports" | "signups" | "sales" | "revenue"
   >("users");
   const [dateRange, setDateRange] = useState({ from: "", to: "" });
   const [previewData, setPreviewData] = useState<any[]>([]);
@@ -71,6 +76,7 @@ export default function ExportPage() {
     else if (selectedDataset === "reports") endpoint = "/api/reports";
     else if (selectedDataset === "signups") endpoint = "/api/signups";
     else if (selectedDataset === "sales") endpoint = "/api/sales";
+    else if (selectedDataset === "revenue") endpoint = "/api/revenue";
     if (!endpoint) return;
     fetch(endpoint)
       .then((res) => res.json())
@@ -81,6 +87,8 @@ export default function ExportPage() {
         else if (selectedDataset === "signups")
           setPreviewData(data.signups || []);
         else if (selectedDataset === "sales") setPreviewData(data.sales || []);
+        else if (selectedDataset === "revenue")
+          setPreviewData(data.revenues || []);
         setLoading(false);
       })
       .catch(() => {

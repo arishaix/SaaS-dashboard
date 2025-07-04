@@ -23,6 +23,7 @@ const DatasetSelector: React.FC<DatasetSelectorProps> = ({
     >
       <option value="users">Users</option>
       <option value="sales">Sales</option>
+      <option value="revenue">Revenue</option>
       <option value="reports">Reports</option>
       <option value="signups">New Signups</option>
     </select>
