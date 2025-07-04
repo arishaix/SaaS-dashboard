@@ -19,9 +19,9 @@ export async function GET() {
       const month = getMonth(r.date);
       revenueByMonth[month] = (revenueByMonth[month] || 0) + r.amount;
     });
-    const revenueData = Object.entries(revenueByMonth).map(
-      ([month, revenue]) => ({ month, revenue })
-    );
+    const revenueData = Object.entries(revenueByMonth)
+      .map(([month, revenue]) => ({ month, revenue }))
+      .sort((a, b) => a.month.localeCompare(b.month));
 
     // Sales Trend
     const sales = await Sale.find({}, "date");
@@ -42,9 +42,9 @@ export async function GET() {
       const month = getMonth(u.createdAt);
       userGrowthByMonth[month] = (userGrowthByMonth[month] || 0) + 1;
     });
-    const userGrowthData = Object.entries(userGrowthByMonth).map(
-      ([month, users]) => ({ month, users })
-    );
+    const userGrowthData = Object.entries(userGrowthByMonth)
+      .map(([month, users]) => ({ month, users }))
+      .sort((a, b) => a.month.localeCompare(b.month));
 
     // User Distribution (by role)
     const roleCounts: Record<string, number> = {};

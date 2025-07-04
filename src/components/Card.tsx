@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import { PlusIcon } from "@heroicons/react/24/solid";
+import Loader from "./Loader";
 
 interface CardProps {
   title: string;
@@ -8,6 +9,7 @@ interface CardProps {
   trend: "up" | "down";
   icon: React.ComponentType<{ className?: string }>;
   onAdd?: () => void;
+  loading?: boolean;
 }
 
 export default function Card({
@@ -17,6 +19,7 @@ export default function Card({
   trend,
   icon: Icon,
   onAdd,
+  loading = false,
 }: CardProps) {
   return (
     <div className="bg-white rounded-2xl shadow-md p-4 sm:p-6 md:p-8 border border-gray-100 relative">
@@ -51,7 +54,9 @@ export default function Card({
         )}
       </div>
       <h3 className="text-gray-500 text-xl font-semibold mb-2">{title}</h3>
-      <p className="text-3xl font-extrabold text-gray-800 mt-1">{value}</p>
+      <p className="text-3xl font-extrabold text-gray-800 mt-1">
+        {loading ? <Loader small /> : value}
+      </p>
       <span
         className={`absolute bottom-9 right-4 text-lg font-semibold ${
           trend === "up" ? "text-green-600" : "text-red-600"

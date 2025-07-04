@@ -9,6 +9,7 @@ import {
   ResponsiveContainer,
   TooltipProps,
 } from "recharts";
+import Loader from "@/components/Loader";
 
 const CustomTooltip = (props: TooltipProps<any, any>) => {
   const anyProps = props as any;
@@ -28,7 +29,24 @@ const CustomTooltip = (props: TooltipProps<any, any>) => {
   );
 };
 
-export default function SalesLineChart({ data }: { data: any[] }) {
+export default function SalesLineChart({
+  data,
+  loading = false,
+}: {
+  data: any[];
+  loading?: boolean;
+}) {
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-[300px] w-full">
+        <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100 w-full flex items-center justify-center">
+          <span>
+            <Loader small />
+          </span>
+        </div>
+      </div>
+    );
+  }
   return (
     <ResponsiveContainer width="100%" height={300}>
       <LineChart data={data}>

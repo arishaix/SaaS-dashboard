@@ -62,14 +62,16 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
-      <div className="bg-[#16113a] rounded-2xl shadow-lg p-14 w-full max-w-2xl relative border border-white">
+      <div className="bg-[#16113a] rounded-2xl shadow-lg p-6 sm:p-10 md:p-14 w-full max-w-2xl relative border border-white mx-2">
         <button
-          className="absolute top-13 right-16 text-3xl text-white cursor-pointer"
+          className="absolute top-4 right-6 sm:top-8 sm:right-10 md:top-13 md:right-16 text-3xl text-white cursor-pointer"
           onClick={onClose}
         >
           &times;
         </button>
-        <h2 className="text-3xl font-bold mb-12 text-white">Add Sale</h2>
+        <h2 className="text-2xl sm:text-3xl font-bold mb-8 sm:mb-12 text-white">
+          Add Sale
+        </h2>
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
           <input
             type="text"

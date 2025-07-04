@@ -62,6 +62,9 @@ export default function DashboardPage() {
   const [addSaleOpen, setAddSaleOpen] = useState(false);
   const [addRevenueOpen, setAddRevenueOpen] = useState(false);
   const [loadingCharts, setLoadingCharts] = useState(false);
+  // Add separate loading states for revenue and sales
+  const [loadingRevenue, setLoadingRevenue] = useState(false);
+  const [loadingSales, setLoadingSales] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -160,6 +163,19 @@ export default function DashboardPage() {
     [userLayout]
   );
 
+  const handleAddSale = async () => {
+    setLoadingSales(true);
+    await fetchStats();
+    await fetchChartStats();
+    setLoadingSales(false);
+  };
+  const handleAddRevenue = async () => {
+    setLoadingRevenue(true);
+    await fetchStats();
+    await fetchChartStats();
+    setLoadingRevenue(false);
+  };
+
   if (status === "loading" || status === "unauthenticated") {
     return <Loader />;
   }
@@ -177,6 +193,7 @@ export default function DashboardPage() {
           change: undefined,
           trend: undefined,
           icon: CurrencyDollarIcon,
+          loading: loadingRevenue,
         },
         {
           title: "Sales",
@@ -184,6 +201,7 @@ export default function DashboardPage() {
           change: undefined,
           trend: undefined,
           icon: ChartBarIcon,
+          loading: loadingSales,
         },
         {
           title: "Users",
@@ -191,6 +209,7 @@ export default function DashboardPage() {
           change: undefined,
           trend: undefined,
           icon: UserGroupIcon,
+          loading: false,
         },
         {
           title: "New Signups",
@@ -198,6 +217,7 @@ export default function DashboardPage() {
           change: undefined,
           trend: undefined,
           icon: UserPlusIcon,
+          loading: false,
         },
       ]
     : [];
@@ -252,19 +272,17 @@ export default function DashboardPage() {
               <AddSaleForm
                 open={addSaleOpen}
                 onClose={() => setAddSaleOpen(false)}
-                onSuccess={() => {
+                onSuccess={async () => {
                   setAddSaleOpen(false);
-                  fetchStats();
-                  fetchChartStats();
+                  await handleAddSale();
                 }}
               />
               <AddRevenueForm
                 open={addRevenueOpen}
                 onClose={() => setAddRevenueOpen(false)}
-                onSuccess={() => {
+                onSuccess={async () => {
                   setAddRevenueOpen(false);
-                  fetchStats();
-                  fetchChartStats();
+                  await handleAddRevenue();
                 }}
               />
               {/* Draggable Stat Cards for all roles, filtered by role */}
@@ -313,7 +331,7 @@ export default function DashboardPage() {
                               }))
                             : [],
                       }}
-                      cols={{ lg: 4, md: 2, sm: 1, xs: 1 }}
+                      cols={{ lg: 4, md: 2, sm: 1, xs: 1, xxs: 1 }}
                       rowHeight={60}
                       isResizable={true}
                       isDraggable={true}
@@ -403,8 +421,14 @@ export default function DashboardPage() {
                                 h: 2,
                               })),
                       }}
-                      breakpoints={{ lg: 1024, md: 768, sm: 480, xs: 0 }}
-                      cols={{ lg: 4, md: 2, sm: 1, xs: 1 }}
+                      breakpoints={{
+                        lg: 1024,
+                        md: 768,
+                        sm: 480,
+                        xs: 0,
+                        xxs: 0,
+                      }}
+                      cols={{ lg: 4, md: 2, sm: 1, xs: 1, xxs: 1 }}
                       rowHeight={180}
                       isResizable={true}
                       isDraggable={true}
@@ -435,7 +459,10 @@ export default function DashboardPage() {
                           >
                             Sales Trend
                           </h2>
-                          <SalesLineChart data={chartStats.sales} />
+                          <SalesLineChart
+                            data={chartStats.sales}
+                            loading={loadingSales}
+                          />
                         </div>
                       </div>
                       <div
@@ -491,7 +518,10 @@ export default function DashboardPage() {
                           >
                             Revenue Trend
                           </h2>
-                          <RevenueAreaChart data={chartStats.revenue} />
+                          <RevenueAreaChart
+                            data={chartStats.revenue}
+                            loading={loadingRevenue}
+                          />
                         </div>
                       </div>
                       <div

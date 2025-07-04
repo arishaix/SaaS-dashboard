@@ -15,6 +15,7 @@ export default function Sidebar() {
     { name: "Dashboard", href: "/dashboard", icon: HomeIcon },
     { name: "Reports", href: "/report", icon: ChartBarIcon },
     { name: "Exports", href: "/exports", icon: ArrowDownTrayIcon },
+    { name: "Admin", href: "/admin", icon: CogIcon },
     { name: "Settings", href: "/settings", icon: CogIcon },
   ];
 
