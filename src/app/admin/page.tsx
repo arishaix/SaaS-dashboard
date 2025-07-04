@@ -5,6 +5,7 @@ import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Loader from "@/components/Loader";
+import UserManagementTable from "@/components/UserManagementTable";
 
 export default function AdminPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -79,10 +80,10 @@ export default function AdminPage() {
           </span>
         </div>
         <div className="p-10">
-          <h1 className="text-3xl font-bold mb-4">Admin Page</h1>
-          <p className="text-lg text-gray-700">
-            This is the admin management area. (Coming soon)
-          </p>
+          <h1 className="text-3xl font-bold mb-4" style={{ color: "#16113a" }}>
+            Admin Page
+          </h1>
+          <UserManagementTable />
         </div>
       </main>
     </div>
