@@ -1,10 +1,43 @@
 "use client";
 import Sidebar from "@/components/Sidebar";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import Loader from "@/components/Loader";
 
 export default function AdminPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [redirecting, setRedirecting] = useState(false);
+
+  useEffect(() => {
+    if (
+      status !== "loading" &&
+      status !== "unauthenticated" &&
+      session?.user?.role !== "admin"
+    ) {
+      setRedirecting(true);
+      router.replace("/dashboard");
+    }
+  }, [session, status, router]);
+
+  // Always show loader if not admin or redirecting
+  if (
+    status === "loading" ||
+    status === "unauthenticated" ||
+    redirecting ||
+    session?.user?.role !== "admin"
+  ) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader />
+      </div>
+    );
+  }
+
+  // Only render admin content if user is admin
   return (
     <div className="flex min-h-screen bg-gray-50 flex-row">
       <aside className="hidden lg:block lg:static inset-y-0 left-0 z-30 transition-all duration-300 w-64 bg-[#16113a] text-white overflow-hidden">

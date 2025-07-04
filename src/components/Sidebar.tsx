@@ -6,18 +6,30 @@ import {
   CogIcon,
   HomeIcon,
   ArrowDownTrayIcon,
+  ShieldCheckIcon,
 } from "@heroicons/react/24/outline";
+import { useSession } from "next-auth/react";
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const { data: session } = useSession();
 
   const navigation = [
     { name: "Dashboard", href: "/dashboard", icon: HomeIcon },
     { name: "Reports", href: "/report", icon: ChartBarIcon },
     { name: "Exports", href: "/exports", icon: ArrowDownTrayIcon },
-    { name: "Admin", href: "/admin", icon: CogIcon },
+    // Admin link will be conditionally added below
     { name: "Settings", href: "/settings", icon: CogIcon },
   ];
+
+  // Conditionally add Admin link if user is admin
+  if (session?.user?.role === "admin") {
+    navigation.splice(3, 0, {
+      name: "Admin",
+      href: "/admin",
+      icon: ShieldCheckIcon,
+    });
+  }
 
   return (
     <div className="h-screen flex flex-col justify-between w-64 px-4 py-5 transition-all duration-300">
