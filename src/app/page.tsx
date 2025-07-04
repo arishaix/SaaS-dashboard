@@ -1,3 +1,5 @@
+"use client";
+
 import Topbar from "../components/Topbar";
 import Link from "next/link";
 import Button from "../components/Button";
@@ -6,8 +8,29 @@ import {
   UsersIcon,
   PuzzlePieceIcon,
 } from "@heroicons/react/24/solid";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import React from "react";
+import Loader from "@/components/Loader";
 
 export default function Home() {
+  const { status } = useSession();
+  const router = useRouter();
+
+  React.useEffect(() => {
+    if (status === "authenticated") {
+      router.replace("/dashboard");
+    }
+  }, [status, router]);
+
+  if (status === "loading" || status === "authenticated") {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader />
+      </div>
+    );
+  }
+
   return (
     <>
       <Topbar />

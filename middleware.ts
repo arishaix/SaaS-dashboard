@@ -6,6 +6,10 @@ export async function middleware(req: NextRequest) {
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
   const { pathname } = req.nextUrl;
 
+  if (token && ["/login", "/signup"].includes(pathname)) {
+    return NextResponse.redirect(new URL("/dashboard", req.url));
+  }
+
   if (pathname.startsWith("/admin")) {
     if (!token || (token.user as any)?.role !== "admin") {
       return NextResponse.redirect(new URL("/login", req.url));
@@ -56,5 +60,7 @@ export const config = {
     "/report/:path*",
     "/settings",
     "/settings/:path*",
+    "/login",
+    "/signup",
   ],
 };

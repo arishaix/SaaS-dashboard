@@ -7,8 +7,12 @@ import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { showToast } from "@/components/ToastMessage";
 import ToastMessage from "@/components/ToastMessage";
+import { useSession } from "next-auth/react";
+import React from "react";
+import Loader from "@/components/Loader";
 
 export default function LoginPage() {
+  const { data: session, status } = useSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string>("");
@@ -16,6 +20,20 @@ export default function LoginPage() {
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const router = useRouter();
+
+  React.useEffect(() => {
+    if (status === "authenticated") {
+      router.replace("/dashboard");
+    }
+  }, [status, router]);
+
+  if (status === "loading" || status === "authenticated") {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader />
+      </div>
+    );
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
