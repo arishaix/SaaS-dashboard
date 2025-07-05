@@ -51,7 +51,10 @@ const ExportPreviewTable: React.FC<ExportPreviewTableProps> = ({
               </svg>
             </button>
             <span className="text-sm text-gray-600">
-              {currentPage} / {totalPages}
+              <span className="hidden sm:inline">
+                {currentPage} / {totalPages}
+              </span>
+              <span className="sm:hidden">{currentPage}</span>
             </span>
             <button
               onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}

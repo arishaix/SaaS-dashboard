@@ -1,8 +1,35 @@
 import React, { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import Loader from "./Loader";
 import ToastMessage, { showToast } from "./ToastMessage";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
-// import ConfirmModal from "./ConfirmModal"; // Removed as per edit hint
+
+// Custom Tooltip Component
+const Tooltip = ({
+  children,
+  content,
+}: {
+  children: React.ReactNode;
+  content: string;
+}) => {
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  return (
+    <div
+      className="relative inline-block w-full"
+      onMouseEnter={() => setShowTooltip(true)}
+      onMouseLeave={() => setShowTooltip(false)}
+    >
+      {children}
+      {showTooltip && content && (
+        <div className="absolute z-50 px-2 py-1 text-sm text-white bg-gray-900 rounded shadow-lg whitespace-nowrap -top-8 left-1/2 transform -translate-x-1/2">
+          {content}
+          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const ROLES = ["admin", "manager", "staff"];
 
@@ -11,12 +38,12 @@ export default function UserManagementTable({
 }: {
   pageSize?: number;
 }) {
+  const { data: session } = useSession();
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
-  // Confirmation modal logic removed
 
   useEffect(() => {
     fetchUsers();
@@ -160,30 +187,36 @@ export default function UserManagementTable({
           </div>
         </div>
       </div>
-      <div className="overflow-x-auto w-full">
-        <table className="text-sm" style={{ minWidth: "720px", width: "100%" }}>
-          <thead>
+      <div
+        className="overflow-x-auto"
+        style={{
+          scrollbarWidth: "thin",
+          scrollbarColor: "#d1d5db #f3f4f6",
+        }}
+      >
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
             <tr>
-              <th className="px-4 py-2 text-left font-bold text-gray-700 border-b">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Name
               </th>
-              <th className="px-4 py-2 text-left font-bold text-gray-700 border-b">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Email
               </th>
-              <th className="px-4 py-2 text-left font-bold text-gray-700 border-b">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Role
               </th>
-              <th className="px-4 py-2 text-left font-bold text-gray-700 border-b">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="bg-white divide-y divide-gray-200">
             {loading ? (
               <tr>
                 <td colSpan={4} className="py-16 text-center align-middle">
                   <div className="flex justify-center items-center h-24">
-                    <Loader small />
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0fd354]"></div>
                   </div>
                 </td>
               </tr>
@@ -195,29 +228,14 @@ export default function UserManagementTable({
               </tr>
             ) : (
               paginated.map((user) => (
-                <tr key={user._id}>
-                  <td
-                    className="px-4 py-2 border-b font-medium break-all"
-                    style={{
-                      color: "#23205a",
-                      borderBottom: "1px solid #e5e7eb",
-                    }}
-                  >
+                <tr key={user._id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {user.name}
                   </td>
-                  <td
-                    className="px-4 py-2 border-b break-all"
-                    style={{
-                      color: "#23205a",
-                      borderBottom: "1px solid #e5e7eb",
-                    }}
-                  >
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {user.email}
                   </td>
-                  <td
-                    className="px-4 py-2 border-b"
-                    style={{ borderBottom: "1px solid #e5e7eb" }}
-                  >
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     <span
                       className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
                         user.role === "admin"
@@ -230,25 +248,39 @@ export default function UserManagementTable({
                       {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
                     </span>
                   </td>
-                  <td
-                    className="px-4 py-2 border-b"
-                    style={{ borderBottom: "1px solid #e5e7eb" }}
-                  >
-                    <select
-                      value={user.role}
-                      disabled={updatingId === user._id}
-                      onChange={(e) =>
-                        handleRoleChange(user._id, e.target.value)
-                      }
-                      className="border rounded px-2 py-1 text-sm"
-                      style={{ color: "#23205a" }}
-                    >
-                      {ROLES.map((role) => (
-                        <option key={role} value={role}>
-                          {role.charAt(0).toUpperCase() + role.slice(1)}
-                        </option>
-                      ))}
-                    </select>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {session?.user?.email === user.email ? (
+                      <Tooltip content="You cannot change your own role">
+                        <select
+                          value={user.role}
+                          disabled={true}
+                          className="border rounded px-2 py-1 text-sm bg-gray-100 cursor-not-allowed"
+                          style={{ color: "#23205a" }}
+                        >
+                          {ROLES.map((role) => (
+                            <option key={role} value={role}>
+                              {role.charAt(0).toUpperCase() + role.slice(1)}
+                            </option>
+                          ))}
+                        </select>
+                      </Tooltip>
+                    ) : (
+                      <select
+                        value={user.role}
+                        disabled={updatingId === user._id}
+                        onChange={(e) =>
+                          handleRoleChange(user._id, e.target.value)
+                        }
+                        className="border rounded px-2 py-1 text-sm"
+                        style={{ color: "#23205a" }}
+                      >
+                        {ROLES.map((role) => (
+                          <option key={role} value={role}>
+                            {role.charAt(0).toUpperCase() + role.slice(1)}
+                          </option>
+                        ))}
+                      </select>
+                    )}
                   </td>
                 </tr>
               ))

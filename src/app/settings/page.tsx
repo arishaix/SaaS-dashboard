@@ -9,37 +9,15 @@ import ChangePasswordForm from "./ChangePasswordForm";
 import ToastMessage, { showToast } from "@/components/ToastMessage";
 
 export default function SettingsPage() {
-  const [notifications, setNotifications] = useState(true);
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const { data: session, status } = useSession();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
       router.replace("/login");
     }
   }, [status, router]);
-
-  // Fetch notificationsEnabled from API on mount
-  useEffect(() => {
-    async function fetchNotifications() {
-      try {
-        const res = await fetch("/api/users/notifications");
-        if (res.ok) {
-          const data = await res.json();
-          setNotifications(data.notificationsEnabled);
-        }
-      } catch {}
-    }
-    if (status === "authenticated") {
-      fetchNotifications();
-    }
-  }, [status]);
 
   if (status === "loading" || status === "unauthenticated") {
     return <Loader />;
@@ -134,47 +112,6 @@ export default function SettingsPage() {
                 >
                   Logout
                 </button>
-              </div>
-            </section>
-
-            {/* Preferences */}
-            <section>
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                Preferences
-              </h3>
-              <div className="grid gap-6 md:grid-cols-2">
-                {/* Notification Toggle */}
-                <div className="flex items-center justify-between p-4 bg-gray-100 rounded-lg">
-                  <span className="text-gray-700 font-medium">
-                    Notifications
-                  </span>
-                  <button
-                    type="button"
-                    aria-pressed={notifications}
-                    onClick={async () => {
-                      const newValue = !notifications;
-                      setNotifications(newValue);
-                      try {
-                        await fetch("/api/users/notifications", {
-                          method: "PATCH",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({
-                            notificationsEnabled: newValue,
-                          }),
-                        });
-                      } catch {}
-                    }}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#16113a] ${
-                      notifications ? "bg-[#16113a]" : "bg-gray-300"
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
-                        notifications ? "translate-x-5" : "translate-x-1"
-                      }`}
-                    />
-                  </button>
-                </div>
               </div>
             </section>
           </div>

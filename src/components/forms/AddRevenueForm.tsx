@@ -25,6 +25,7 @@ const AddRevenueForm: React.FC<AddRevenueFormProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return; // Prevent multiple submissions
     setLoading(true);
     setError("");
     setSuccess("");

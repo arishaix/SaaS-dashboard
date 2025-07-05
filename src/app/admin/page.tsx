@@ -6,12 +6,14 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Loader from "@/components/Loader";
 import UserManagementTable from "@/components/UserManagementTable";
+import AdminCRUDTable from "@/components/AdminCRUDTable";
 
 export default function AdminPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { data: session, status } = useSession();
   const router = useRouter();
   const [redirecting, setRedirecting] = useState(false);
+  const [activeTab, setActiveTab] = useState("users");
 
   useEffect(() => {
     if (
@@ -24,7 +26,6 @@ export default function AdminPage() {
     }
   }, [session, status, router]);
 
-  // Always show loader if not admin or redirecting
   if (
     status === "loading" ||
     status === "unauthenticated" ||
@@ -37,6 +38,29 @@ export default function AdminPage() {
       </div>
     );
   }
+
+  const tabs = [
+    {
+      id: "users",
+      label: "User Management",
+      component: <UserManagementTable />,
+    },
+    {
+      id: "revenue",
+      label: "Revenue Management",
+      component: <AdminCRUDTable dataType="revenue" title="Revenue Data" />,
+    },
+    {
+      id: "sales",
+      label: "Sales Management",
+      component: <AdminCRUDTable dataType="sales" title="Sales Data" />,
+    },
+    {
+      id: "reports",
+      label: "Reports Management",
+      component: <AdminCRUDTable dataType="reports" title="Reports Data" />,
+    },
+  ];
 
   // Only render admin content if user is admin
   return (
@@ -79,11 +103,49 @@ export default function AdminPage() {
             SaaS Dashboard
           </span>
         </div>
-        <div className="p-10">
-          <h1 className="text-3xl font-bold mb-4" style={{ color: "#16113a" }}>
-            Admin Page
-          </h1>
-          <UserManagementTable />
+        <div className="p-6 lg:p-8">
+          <div className="max-w-[1600px] mx-auto">
+            <div className="mb-8">
+              <h1
+                className="text-3xl font-bold mb-2"
+                style={{ color: "#16113a" }}
+              >
+                Admin Panel
+              </h1>
+            </div>
+
+            {/* Tab Navigation */}
+            <div className="mb-6">
+              <div className="border-b border-gray-200">
+                <nav
+                  className="-mb-px flex space-x-8 overflow-x-auto"
+                  style={{
+                    scrollbarWidth: "thin",
+                    scrollbarColor: "#d1d5db #f3f4f6",
+                  }}
+                >
+                  {tabs.map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
+                        activeTab === tab.id
+                          ? "border-[#0fd354] text-[#0fd354]"
+                          : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </nav>
+              </div>
+            </div>
+
+            {/* Tab Content */}
+            <div className="space-y-6">
+              {tabs.find((tab) => tab.id === activeTab)?.component}
+            </div>
+          </div>
         </div>
       </main>
     </div>
