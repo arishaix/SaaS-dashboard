@@ -6,9 +6,10 @@ import Sale from "@/models/Sale";
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (!session || session.user?.role !== "admin") {
@@ -19,7 +20,7 @@ export async function PUT(
     const body = await request.json();
 
     const updatedSale = await Sale.findByIdAndUpdate(
-      params.id,
+      id,
       {
         orderId: body.orderId,
         amount: body.amount,
@@ -44,9 +45,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (!session || session.user?.role !== "admin") {
@@ -55,7 +57,7 @@ export async function DELETE(
 
     await dbConnect();
 
-    const deletedSale = await Sale.findByIdAndDelete(params.id);
+    const deletedSale = await Sale.findByIdAndDelete(id);
 
     if (!deletedSale) {
       return NextResponse.json({ error: "Sale not found" }, { status: 404 });

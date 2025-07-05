@@ -6,9 +6,10 @@ import Report from "@/models/Report";
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (!session || session.user?.role !== "admin") {
@@ -19,7 +20,7 @@ export async function PUT(
     const body = await request.json();
 
     const updatedReport = await Report.findByIdAndUpdate(
-      params.id,
+      id,
       {
         name: body.name,
         date: body.date,
@@ -45,9 +46,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (!session || session.user?.role !== "admin") {
@@ -56,7 +58,7 @@ export async function DELETE(
 
     await dbConnect();
 
-    const deletedReport = await Report.findByIdAndDelete(params.id);
+    const deletedReport = await Report.findByIdAndDelete(id);
 
     if (!deletedReport) {
       return NextResponse.json({ error: "Report not found" }, { status: 404 });

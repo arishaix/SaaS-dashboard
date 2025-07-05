@@ -6,9 +6,10 @@ import Revenue from "@/models/Revenue";
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (!session || session.user?.role !== "admin") {
@@ -19,7 +20,7 @@ export async function PUT(
     const body = await request.json();
 
     const updatedRevenue = await Revenue.findByIdAndUpdate(
-      params.id,
+      id,
       {
         amount: body.amount,
         source: body.source,
@@ -44,9 +45,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
 
     if (!session || session.user?.role !== "admin") {
@@ -55,7 +57,7 @@ export async function DELETE(
 
     await dbConnect();
 
-    const deletedRevenue = await Revenue.findByIdAndDelete(params.id);
+    const deletedRevenue = await Revenue.findByIdAndDelete(id);
 
     if (!deletedRevenue) {
       return NextResponse.json({ error: "Revenue not found" }, { status: 404 });
